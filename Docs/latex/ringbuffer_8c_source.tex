@@ -1,0 +1,38 @@
+\hypertarget{ringbuffer_8c_source}{}\doxysection{ringbuffer.\+c}
+\label{ringbuffer_8c_source}\index{Core/Src/ringbuffer.c@{Core/Src/ringbuffer.c}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00001}00001 \textcolor{preprocessor}{\#include <stdint.h>}}
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00002}00002 \textcolor{preprocessor}{\#include <stddef.h>}}
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00003}00003 \textcolor{preprocessor}{\#include "{}\mbox{\hyperlink{ringbuffer_8h}{ringbuffer.h}}"{}}}
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00004}00004 }
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00005}00005 uint8\_t ringbuf\_init(\mbox{\hyperlink{structringbuf}{ringbuf\_t}} *\mbox{\hyperlink{structringbuf}{ringbuf}}, uint8\_t *buf\_data, \textcolor{keywordtype}{size\_t} size)}
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00006}00006 \{}
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00007}00007     \textcolor{keywordflow}{if} (\mbox{\hyperlink{structringbuf}{ringbuf}} == NULL || buf\_data == NULL || size == 0)}
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00008}00008     \{}
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00009}00009         \textcolor{keywordflow}{return} 0;}
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00010}00010     \}}
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00011}00011 }
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00012}00012     \mbox{\hyperlink{structringbuf}{ringbuf}}-\/>size = size;}
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00013}00013     \mbox{\hyperlink{structringbuf}{ringbuf}}-\/>start = 0;}
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00014}00014     \mbox{\hyperlink{structringbuf}{ringbuf}}-\/>end = 0;}
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00015}00015     \mbox{\hyperlink{structringbuf}{ringbuf}}-\/>buf = buf\_data;}
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00016}00016 }
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00017}00017     \textcolor{keywordflow}{return} 1;}
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00018}00018 \}}
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00019}00019 }
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00020}\mbox{\hyperlink{ringbuffer_8h_a3be58564bbdc14413b739c5811548200}{00020}} \textcolor{keywordtype}{void} \mbox{\hyperlink{ringbuffer_8h_a3be58564bbdc14413b739c5811548200}{ringbuf\_put}}(\mbox{\hyperlink{structringbuf}{ringbuf\_t}} *\mbox{\hyperlink{structringbuf}{ringbuf}}, uint8\_t data)}
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00021}00021 \{}
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00022}00022    \mbox{\hyperlink{structringbuf}{ringbuf}}-\/>buf[\mbox{\hyperlink{structringbuf}{ringbuf}}-\/>end++] = data;}
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00023}00023    \mbox{\hyperlink{structringbuf}{ringbuf}}-\/>end \%= \mbox{\hyperlink{structringbuf}{ringbuf}}-\/>size;}
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00024}00024 \}}
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00025}00025 }
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00026}\mbox{\hyperlink{ringbuffer_8h_a7153569a9eb8c5844a4ae3a034a39580}{00026}} uint8\_t \mbox{\hyperlink{ringbuffer_8h_a7153569a9eb8c5844a4ae3a034a39580}{ringbuf\_get}}(\mbox{\hyperlink{structringbuf}{ringbuf\_t}} *\mbox{\hyperlink{structringbuf}{ringbuf}})}
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00027}00027 \{}
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00028}00028     uint8\_t data = \mbox{\hyperlink{structringbuf}{ringbuf}}-\/>buf[\mbox{\hyperlink{structringbuf}{ringbuf}}-\/>start++];}
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00029}00029     \mbox{\hyperlink{structringbuf}{ringbuf}}-\/>start \%= \mbox{\hyperlink{structringbuf}{ringbuf}}-\/>size;}
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00030}00030     \textcolor{keywordflow}{return} data;}
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00031}00031 \}}
+\DoxyCodeLine{\Hypertarget{ringbuffer_8c_source_l00032}00032 }
+
+\end{DoxyCode}

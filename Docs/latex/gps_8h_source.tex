@@ -1,0 +1,71 @@
+\hypertarget{gps_8h_source}{}\doxysection{gps.\+h}
+\label{gps_8h_source}\index{Core/Inc/gps.h@{Core/Inc/gps.h}}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00001}00001 \textcolor{preprocessor}{\#ifndef GPS\_H}}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00002}00002 \textcolor{preprocessor}{\#define GPS\_H}}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00003}00003 }
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00004}00004 \textcolor{preprocessor}{\#include "{}\mbox{\hyperlink{ringbuffer_8h}{ringbuffer.h}}"{}}}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00005}00005 }
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00006}00006 \textcolor{preprocessor}{\#define NUM\_FIELDS\_MAX      32}}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00007}00007 \textcolor{preprocessor}{\#define FIELD\_LENGTH\_MAX    32}}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00008}00008 }
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00009}\mbox{\hyperlink{struct_g_l_l}{00009}} \textcolor{keyword}{typedef} \textcolor{keyword}{struct }\mbox{\hyperlink{struct_g_l_l}{GLL}} \{}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00010}00010     \textcolor{keywordtype}{double}  lat;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00011}00011     \textcolor{keywordtype}{char}    ns;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00012}00012     \textcolor{keywordtype}{double}  lon;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00013}00013     \textcolor{keywordtype}{char}    ew;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00014}00014     \textcolor{keywordtype}{double}  time;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00015}00015     \textcolor{keywordtype}{char}    status;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00016}00016     \textcolor{keywordtype}{char}    pos\_mode;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00017}00017     uint32\_t checksum;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00018}00018 \} \mbox{\hyperlink{struct_g_l_l}{GLL\_t}};}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00019}00019 }
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00020}\mbox{\hyperlink{struct_g_g_a}{00020}} \textcolor{keyword}{typedef} \textcolor{keyword}{struct }\mbox{\hyperlink{struct_g_g_a}{GGA}} \{}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00021}00021     \textcolor{keywordtype}{float}   time;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00022}00022     \textcolor{keywordtype}{float}   lat;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00023}00023     \textcolor{keywordtype}{char}    ns;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00024}00024     \textcolor{keywordtype}{float}   lon;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00025}00025     \textcolor{keywordtype}{char}    ew;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00026}00026     uint8\_t quality;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00027}00027     uint8\_t numSV;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00028}00028     \textcolor{keywordtype}{float}   hdop;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00029}00029     \textcolor{keywordtype}{float}   alt;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00030}00030     \textcolor{keywordtype}{char}    altUnit;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00031}00031     \textcolor{keywordtype}{float}   sep;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00032}00032     \textcolor{keywordtype}{char}    sepUnit;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00033}00033     \textcolor{keywordtype}{float}   diffAge;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00034}00034     \textcolor{keywordtype}{float}   diffStation;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00035}00035     uint8\_t checksum;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00036}00036 \} \mbox{\hyperlink{struct_g_g_a}{GGA\_t}};}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00037}00037 }
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00038}\mbox{\hyperlink{struct_g_n_s}{00038}} \textcolor{keyword}{typedef} \textcolor{keyword}{struct }\mbox{\hyperlink{struct_g_n_s}{GNS}} \{}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00039}00039     \textcolor{keywordtype}{float}   time;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00040}00040     \textcolor{keywordtype}{float}   lat;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00041}00041     \textcolor{keywordtype}{char}    ns;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00042}00042     \textcolor{keywordtype}{float}   lon;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00043}00043     \textcolor{keywordtype}{char}    ew;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00044}00044     \textcolor{keywordtype}{char}    pos\_mode;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00045}00045     uint8\_t numSV;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00046}00046     \textcolor{keywordtype}{float}   hdop;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00047}00047     \textcolor{keywordtype}{float}   alt;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00048}00048     \textcolor{keywordtype}{float}   sep;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00049}00049     \textcolor{keywordtype}{float}   diffAge;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00050}00050     \textcolor{keywordtype}{float}   diffStation;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00051}00051     \textcolor{keywordtype}{char}    navStatus;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00052}00052     uint32\_t checksum;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00053}00053 \} \mbox{\hyperlink{struct_g_n_s}{GNS\_t}};}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00054}00054 }
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00055}\mbox{\hyperlink{struct_g_p_s___handle}{00055}} \textcolor{keyword}{typedef} \textcolor{keyword}{struct }\{}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00056}00056     \mbox{\hyperlink{struct_g_n_s}{GNS\_t}} gns;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00057}00057     \mbox{\hyperlink{struct_g_l_l}{GLL\_t}} gll;}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00058}00058 \} \mbox{\hyperlink{struct_g_p_s___handle}{GPS\_Handle}};}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00059}00059 }
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00060}00060 \textcolor{keywordtype}{void} parse\_nmea\_packet(\mbox{\hyperlink{struct_g_p_s___handle}{GPS\_Handle}} *gps, \mbox{\hyperlink{structringbuf}{ringbuf\_t}} *\mbox{\hyperlink{structringbuf}{ringbuf}}, \textcolor{keywordtype}{int} num\_messages, ...);}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00061}00061 \textcolor{keywordtype}{void} save\_packet(\mbox{\hyperlink{struct_g_p_s___handle}{GPS\_Handle}} *gps, \textcolor{keywordtype}{char} *message\_id, uint8\_t data[NUM\_FIELDS\_MAX][FIELD\_LENGTH\_MAX], uint8\_t field\_num);}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00062}00062 }
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00063}00063 }
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00064}00064 \textcolor{preprocessor}{\#endif }\textcolor{comment}{/* GPS\_H */}\textcolor{preprocessor}{}}
+\DoxyCodeLine{\Hypertarget{gps_8h_source_l00065}00065 }
+
+\end{DoxyCode}

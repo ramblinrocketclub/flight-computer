@@ -1,0 +1,123 @@
+\hypertarget{ringbuffer_8h}{}\doxysection{Core/\+Inc/ringbuffer.h File Reference}
+\label{ringbuffer_8h}\index{Core/Inc/ringbuffer.h@{Core/Inc/ringbuffer.h}}
+
+
+This file contains the rinbuffer struct and functions.  
+
+
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structringbuf}{ringbuf}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{ringbuffer_8h_a8c663b49187a173fa8dbf3ffc23e81d0}\label{ringbuffer_8h_a8c663b49187a173fa8dbf3ffc23e81d0}} 
+typedef struct \mbox{\hyperlink{structringbuf}{ringbuf}} {\bfseries ringbuf\+\_\+t}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+uint8\+\_\+t \mbox{\hyperlink{ringbuffer_8h_a0906407c79c3c632c3b5385a93c8aee7}{ringbuf\+\_\+init}} (\mbox{\hyperlink{structringbuf}{ringbuf\+\_\+t}} $\ast$\mbox{\hyperlink{structringbuf}{ringbuf}}, uint8\+\_\+t $\ast$buf\+\_\+data, size\+\_\+t size)
+\item 
+void \mbox{\hyperlink{ringbuffer_8h_a3be58564bbdc14413b739c5811548200}{ringbuf\+\_\+put}} (\mbox{\hyperlink{structringbuf}{ringbuf\+\_\+t}} $\ast$\mbox{\hyperlink{structringbuf}{ringbuf}}, uint8\+\_\+t data)
+\begin{DoxyCompactList}\small\item\em Inserts an element into a specified ring buffer. \end{DoxyCompactList}\item 
+uint8\+\_\+t \mbox{\hyperlink{ringbuffer_8h_a7153569a9eb8c5844a4ae3a034a39580}{ringbuf\+\_\+get}} (\mbox{\hyperlink{structringbuf}{ringbuf\+\_\+t}} $\ast$\mbox{\hyperlink{structringbuf}{ringbuf}})
+\begin{DoxyCompactList}\small\item\em Gets the current element pointed to by the read pointer. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+This file contains the rinbuffer struct and functions. 
+
+
+
+Definition in file \mbox{\hyperlink{ringbuffer_8h_source}{ringbuffer.\+h}}.
+
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{ringbuffer_8h_a7153569a9eb8c5844a4ae3a034a39580}\label{ringbuffer_8h_a7153569a9eb8c5844a4ae3a034a39580}} 
+\index{ringbuffer.h@{ringbuffer.h}!ringbuf\_get@{ringbuf\_get}}
+\index{ringbuf\_get@{ringbuf\_get}!ringbuffer.h@{ringbuffer.h}}
+\doxysubsubsection{\texorpdfstring{ringbuf\_get()}{ringbuf\_get()}}
+{\footnotesize\ttfamily uint8\+\_\+t ringbuf\+\_\+get (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structringbuf}{ringbuf\+\_\+t}} $\ast$}]{ringbuf }\end{DoxyParamCaption})}
+
+
+
+Gets the current element pointed to by the read pointer. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em ringbuf} & a pointer to a ring buffer \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line \mbox{\hyperlink{ringbuffer_8c_source_l00026}{26}} of file \mbox{\hyperlink{ringbuffer_8c_source}{ringbuffer.\+c}}.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00027 \{}
+\DoxyCodeLine{00028     uint8\_t data = \mbox{\hyperlink{structringbuf}{ringbuf}}-\/>buf[\mbox{\hyperlink{structringbuf}{ringbuf}}-\/>start++];}
+\DoxyCodeLine{00029     \mbox{\hyperlink{structringbuf}{ringbuf}}-\/>start \%= \mbox{\hyperlink{structringbuf}{ringbuf}}-\/>size;}
+\DoxyCodeLine{00030     \textcolor{keywordflow}{return} data;}
+\DoxyCodeLine{00031 \}}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{ringbuffer_8h_a0906407c79c3c632c3b5385a93c8aee7}\label{ringbuffer_8h_a0906407c79c3c632c3b5385a93c8aee7}} 
+\index{ringbuffer.h@{ringbuffer.h}!ringbuf\_init@{ringbuf\_init}}
+\index{ringbuf\_init@{ringbuf\_init}!ringbuffer.h@{ringbuffer.h}}
+\doxysubsubsection{\texorpdfstring{ringbuf\_init()}{ringbuf\_init()}}
+{\footnotesize\ttfamily uint8\+\_\+t ringbuf\+\_\+init (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structringbuf}{ringbuf\+\_\+t}} $\ast$}]{ringbuf,  }\item[{uint8\+\_\+t $\ast$}]{buf\+\_\+data,  }\item[{size\+\_\+t}]{size }\end{DoxyParamCaption})}
+
+
+
+Definition at line \mbox{\hyperlink{ringbuffer_8c_source_l00005}{5}} of file \mbox{\hyperlink{ringbuffer_8c_source}{ringbuffer.\+c}}.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00006 \{}
+\DoxyCodeLine{00007     \textcolor{keywordflow}{if} (\mbox{\hyperlink{structringbuf}{ringbuf}} == NULL || buf\_data == NULL || size == 0)}
+\DoxyCodeLine{00008     \{}
+\DoxyCodeLine{00009         \textcolor{keywordflow}{return} 0;}
+\DoxyCodeLine{00010     \}}
+\DoxyCodeLine{00011 }
+\DoxyCodeLine{00012     \mbox{\hyperlink{structringbuf}{ringbuf}}-\/>size = size;}
+\DoxyCodeLine{00013     \mbox{\hyperlink{structringbuf}{ringbuf}}-\/>start = 0;}
+\DoxyCodeLine{00014     \mbox{\hyperlink{structringbuf}{ringbuf}}-\/>end = 0;}
+\DoxyCodeLine{00015     \mbox{\hyperlink{structringbuf}{ringbuf}}-\/>buf = buf\_data;}
+\DoxyCodeLine{00016 }
+\DoxyCodeLine{00017     \textcolor{keywordflow}{return} 1;}
+\DoxyCodeLine{00018 \}}
+
+\end{DoxyCode}
+\mbox{\Hypertarget{ringbuffer_8h_a3be58564bbdc14413b739c5811548200}\label{ringbuffer_8h_a3be58564bbdc14413b739c5811548200}} 
+\index{ringbuffer.h@{ringbuffer.h}!ringbuf\_put@{ringbuf\_put}}
+\index{ringbuf\_put@{ringbuf\_put}!ringbuffer.h@{ringbuffer.h}}
+\doxysubsubsection{\texorpdfstring{ringbuf\_put()}{ringbuf\_put()}}
+{\footnotesize\ttfamily void ringbuf\+\_\+put (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structringbuf}{ringbuf\+\_\+t}} $\ast$}]{ringbuf,  }\item[{uint8\+\_\+t}]{data }\end{DoxyParamCaption})}
+
+
+
+Inserts an element into a specified ring buffer. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em ringbuf} & a pointer to a ring buffer \\
+\hline
+{\em data} & byte to be inserted into the ring buffer \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line \mbox{\hyperlink{ringbuffer_8c_source_l00020}{20}} of file \mbox{\hyperlink{ringbuffer_8c_source}{ringbuffer.\+c}}.
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{00021 \{}
+\DoxyCodeLine{00022    \mbox{\hyperlink{structringbuf}{ringbuf}}-\/>buf[\mbox{\hyperlink{structringbuf}{ringbuf}}-\/>end++] = data;}
+\DoxyCodeLine{00023    \mbox{\hyperlink{structringbuf}{ringbuf}}-\/>end \%= \mbox{\hyperlink{structringbuf}{ringbuf}}-\/>size;}
+\DoxyCodeLine{00024 \}}
+
+\end{DoxyCode}
