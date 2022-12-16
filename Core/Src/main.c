@@ -13,6 +13,7 @@
 
 #define AF07                (0x7UL)
 #define AF08                (0x8UL)
+#define AF11                (11UL)
 
 #define BUFFER_EMPTY        (0x0UL)
 #define BUFFER_FULL         (0x1UL)
@@ -48,7 +49,7 @@ int main(void)
 {
     RCC->AHB4ENR |= RCC_AHB4ENR_GPIODEN;                                    // enable GPIOD clock
     RCC->AHB4ENR |= RCC_AHB4ENR_GPIOEEN;
-    RCC->AHB4ENR |= RCC_AHB4ENR_GPIOBEN;
+    RCC->AHB4ENR |= RCC_AHB4ENR_GPIOBEN;                                    // enable GPIOB clock
     RCC->APB1LENR |= RCC_APB1LENR_USART3EN;                                 // enable USART3 clock
     RCC->APB1LENR |= RCC_APB1LENR_UART8EN;
     RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN;                                     // enable DMA1 clock
@@ -59,6 +60,9 @@ int main(void)
     GPIOE->MODER &= ~(GPIO_MODER_MODE0);
     GPIOE->MODER &= ~(GPIO_MODER_MODE1);
 
+    GPIOB->MODER &= ~(GPIO_MODER_MODE3);                                    // reset PB3
+    GPIOB->MODER &= ~(GPIO_MODER_MODE4);                                    // reset PB4
+
     GPIOB->MODER &= ~(GPIO_MODER_MODE0);
 
     GPIOD->MODER |= GPIO_MODER_MODE8_1;                                     // set PD8 to AF mode
@@ -67,6 +71,9 @@ int main(void)
     GPIOE->MODER |= GPIO_MODER_MODE0_1;
     GPIOE->MODER |= GPIO_MODER_MODE1_1;
 
+    GPIOB->MODER |= GPIO_MODER_MODE3_1;                                     // set PB3 to AF mode
+    GPIOB->MODER |= GPIO_MODER_MODE4_1;                                     // set PB4 to AF mode
+
     GPIOB->MODER |= GPIO_MODER_MODE0_0;
 
     GPIOD->AFR[1] |= (AF07 << 0);                                           // set PD8 to AF7 (USART3_TX)
@@ -74,6 +81,9 @@ int main(void)
 
     GPIOE->AFR[0] |= (AF08 << 0);
     GPIOE->AFR[0] |= (AF08 << 4);
+
+    GPIOB->AFR[0] |= (AF11 << 4 * 3);                                       // set PB3 to AF11 (UART7_RX)
+    GPIOB->AFR[0] |= (AF11 << 4 * 4);                                       // set PB4 to AF11 (UART7_TX)
 
     USART3->BRR = 0x0683;
     USART3->CR1 = 0;
