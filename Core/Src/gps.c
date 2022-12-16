@@ -67,7 +67,7 @@ void save_packet(GPS_Handle *gps, char *message_id, uint8_t data[NUM_FIELDS_MAX]
 {
     if (strcmp(message_id, "GNGNS") == 0)
     {
-        asm("nop");
+        // asm("nop");
     }
 
     else if (strcmp(message_id, "GNGLL") == 0)

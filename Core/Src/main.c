@@ -171,6 +171,15 @@ int main(void)
 
             parse_nmea_packet(gps, buf, 1, "GNGLL");
 
+            if (gps->gll.pos_mode != 'A')
+            {
+                sprintf((char *) uart8_tx_data, "%c", gps->gll.pos_mode);
+                USART3_DMA1_Stream3_Write((uint8_t *) "Fix mode: ", strlen((char *) "Fix mode: "));
+                USART3_DMA1_Stream3_Write((uint8_t *) uart8_tx_data, strlen((char *) uart8_tx_data));
+                USART3_DMA1_Stream3_Write((uint8_t *) "\n", strlen((char *) "\n"));
+                continue;
+            }
+
             sprintf((char *) uart8_tx_data, "%lf", gps->gll.lat);
             USART3_DMA1_Stream3_Write((uint8_t *) "Latitude: ", strlen((char *) "Latitude: "));
             USART3_DMA1_Stream3_Write((uint8_t *) uart8_tx_data, strlen((char *) uart8_tx_data));
@@ -200,7 +209,6 @@ int main(void)
             USART3_DMA1_Stream3_Write((uint8_t *) uart8_tx_data, strlen((char *) uart8_tx_data));
 
             USART3_DMA1_Stream3_Write((uint8_t *) "\n", strlen((char *) "\n"));
-
         }
 	}
 }
