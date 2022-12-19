@@ -12,6 +12,7 @@
 #include "gps.h"
 
 #include "log.h"
+#include "kalman_filter.h"
 
 #define AF07                (0x7UL)
 #define AF08                (0x8UL)
@@ -20,6 +21,8 @@
 #define BUFFER_FULL         (0x1UL)
 
 #define GPS_BUF_SIZE        512
+
+#define DT_SECONDS 0.02
 
 #define SIZE(array)         (sizeof(array) / sizeof(array[0]))
 
@@ -165,6 +168,42 @@ int main(void)
     UART8_DMA1_Stream0_Read(uart8_rx_data, GPS_BUF_SIZE);
 
     LOG_INFO("Initialization successful %d", 123);
+
+
+    // Basic kalman filter for constant accelerating body
+    KalmanFilter kf;
+
+    float32_t F_f32[4] = {
+        1, DT_SECONDS,
+        0, 1
+    };
+
+    float32_t G_f32[2] = {
+        0.5 * DT_SECONDS * DT_SECONDS,
+        DT_SECONDS
+    };
+
+    float32_t P_f32[4] = {
+        0.04, 0.04,
+        0.04, 0.04
+    };
+
+    float32_t Q_f32[4] = {
+        0, 0,
+        0, 0
+    };
+
+    float32_t xHat_f32[2] = {
+        // Position, velocity
+        0, 0
+    };
+
+    float32_t stateStdDevs_f32[2] = {
+        // Position std, velocity std
+        0.02, 0.02
+    };
+
+    init_kalman_filter(&kf, 2, 1, &F_f32[0], &G_f32[0], &P_f32[0], &Q_f32[0], &xHat_f32[0], &stateStdDevs_f32[0]);
 
     while(1)
     {

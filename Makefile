@@ -121,7 +121,8 @@ C_INCLUDES =  \
 -IDrivers/STM32H7xx_HAL_Driver/Inc \
 -IDrivers/STM32H7xx_HAL_Driver/Inc/Legacy \
 -IDrivers/CMSIS/Device/ST/STM32H7xx/Include \
--IDrivers/CMSIS/Include
+-IDrivers/CMSIS/Include \
+-IDrivers/CMSIS/DSP/Include
 
 
 # compile gcc flags
@@ -145,8 +146,8 @@ CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 LDSCRIPT = STM32H723ZGTx_FLASH.ld
 
 # libraries
-LIBS = -lc -lm -lnosys
-LIBDIR =
+LIBS = -lc -lm -lnosys -larm_cortexM7lfdp_math
+LIBDIR = -L./Drivers/CMSIS/DSP/Lib/GCC
 LDFLAGS = $(MCU) -specs=nano.specs -u _printf_float -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
 
 # default action: build all
