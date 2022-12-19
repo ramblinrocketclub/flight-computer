@@ -11,6 +11,8 @@
 #include "ringbuffer.h"
 #include "gps.h"
 
+#include "log.h"
+
 #define AF07                (0x7UL)
 #define AF08                (0x8UL)
 
@@ -161,6 +163,8 @@ int main(void)
     NVIC_EnableIRQ(DMA1_Stream4_IRQn);
 
     UART8_DMA1_Stream0_Read(uart8_rx_data, GPS_BUF_SIZE);
+
+    LOG_INFO("Initialization successful");
 
     while(1)
     {

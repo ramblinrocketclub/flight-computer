@@ -31,16 +31,13 @@ OPT = -Og
 # Build path
 BUILD_DIR = build
 
+SOURCEDIR = Core/Src
+
 ######################################
 # source
 ######################################
 # C sources
-C_SOURCES =  \
-Core/Src/main.c \
-Core/Src/system_stm32h7xx.c \
-Core/Src/ringbuffer.c \
-Core/Src/gps.c \
-Core/Src/stm32h7xx_it.c
+C_SOURCES = $(wildcard $(SOURCEDIR)/*.c)
 
 #C_SOURCES =  \
 Core/Src/main.c \
