@@ -164,7 +164,7 @@ int main(void)
 
     UART8_DMA1_Stream0_Read(uart8_rx_data, GPS_BUF_SIZE);
 
-    LOG_INFO("Initialization successful");
+    LOG_INFO("Initialization successful %d", 123);
 
     while(1)
     {
