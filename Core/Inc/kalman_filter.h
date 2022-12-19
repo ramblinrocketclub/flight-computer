@@ -21,7 +21,7 @@ typedef struct KalmanFilter {
     arm_matrix_instance_f32 xHat;
 } KalmanFilter;
 
-void init_kalman_filter(KalmanFilter *kf, uint16_t numStates, uint16_t numInputs, 
+arm_status init_kalman_filter(KalmanFilter *kf, uint16_t numStates, uint16_t numInputs, 
                         float32_t *F_f32, float32_t *G_f32, float32_t *initialP, 
                         float32_t *Q_f32, float32_t *initialXHat, float32_t *stateStdDevs);
 
