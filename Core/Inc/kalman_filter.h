@@ -25,4 +25,6 @@ arm_status init_kalman_filter(KalmanFilter *kf, uint16_t numStates, uint16_t num
                         float32_t *F_f32, float32_t *G_f32, float32_t *initialP, 
                         float32_t *Q_f32, float32_t *initialXHat, float32_t *stateStdDevs);
 
+arm_status predict_kalman_filter(KalmanFilter *kf, float32_t *un_f32);
+
 #endif /* KALMAN_FILTER_H */
