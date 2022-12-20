@@ -54,16 +54,16 @@ arm_status predict_kalman_filter(KalmanFilter *kf, float32_t *un_f32) {
     arm_mat_init_f32(&fullPTerm, kf->numStates, kf->numStates, fullPTerm_f32);
 
     // Extrapolate state
-    arm_mat_mult_f32(&kf->F, &kf->xHat, &fTerm);
-    arm_mat_mult_f32(&kf->G, &un, &gTerm);
+    result |= arm_mat_mult_f32(&kf->F, &kf->xHat, &fTerm);
+    result |= arm_mat_mult_f32(&kf->G, &un, &gTerm);
 
-    arm_mat_add_f32(&fTerm, &gTerm, &kf->xHat);
+    result |= arm_mat_add_f32(&fTerm, &gTerm, &kf->xHat);
 
     // Extrapolate uncertainty
-    arm_mat_mult_f32(&kf->F, &kf->P, &partialPTerm);
-    arm_mat_trans_f32(&kf->F, &fT);
-    arm_mat_mult_f32(&partialPTerm, &fT, &fullPTerm);
-    arm_mat_add_f32(&fullPTerm, &kf->Q, &kf->P);
+    result |= arm_mat_mult_f32(&kf->F, &kf->P, &partialPTerm);
+    result |= arm_mat_trans_f32(&kf->F, &fT);
+    result |= arm_mat_mult_f32(&partialPTerm, &fT, &fullPTerm);
+    result |= arm_mat_add_f32(&fullPTerm, &kf->Q, &kf->P);
 
     return result;
 }
