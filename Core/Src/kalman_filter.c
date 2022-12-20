@@ -73,7 +73,7 @@ arm_status correct_kalman_filter(KalmanFilter *kf, uint16_t numMeasuredStates, f
     arm_status result = ARM_MATH_SUCCESS;
     
     float32_t HT_f32[kf->numStates * numMeasuredStates];
-    float32_t vn_f32[numMeasuredStates];
+    float32_t vnT_f32[numMeasuredStates];
     float32_t Rn_f32[numMeasuredStates * numMeasuredStates];
     float32_t K_f32[kf->numStates * numMeasuredStates];
     float32_t KT_f32[numMeasuredStates * kf->numStates];
@@ -81,11 +81,30 @@ arm_status correct_kalman_filter(KalmanFilter *kf, uint16_t numMeasuredStates, f
     float32_t PHT_f32[kf->numStates * numMeasuredStates];
     float32_t HPHT_f32[numMeasuredStates * numMeasuredStates];
     float32_t HPHTRn_f32[numMeasuredStates * numMeasuredStates];
+    float32_t HPHTRnI_f32[numMeasuredStates * numMeasuredStates];
+
+    float32_t HxHat_f32[numMeasuredStates];
+    float32_t znHxHat_f32[numMeasuredStates];
+    float32_t KznHxHat_f32[kf->numStates];
+    float32_t oldXHat_f32[kf->numStates];
+
+    float32_t KH_f32[kf->numStates * kf->numStates];
+    float32_t I_f32[kf->numStates * kf->numStates];
+    float32_t IKH_f32[kf->numStates * kf->numStates];
+    float32_t IKHT_f32[kf->numStates * kf->numStates];
+
+    float32_t IKHP_f32[kf->numStates * kf->numStates];
+    float32_t IKHPIKHT_f32[kf->numStates * kf->numStates];
+
+    float32_t KR_f32[kf->numStates * numMeasuredStates];
+    float32_t KRKT_f32[kf->numStates * kf->numStates];
 
     // P: nx * nx
     arm_matrix_instance_f32 H;  // nz * nx
     arm_matrix_instance_f32 HT; // nx * nz
+    arm_matrix_instance_f32 zn; // nz * 1
     arm_matrix_instance_f32 vn; // nz * 1
+    arm_matrix_instance_f32 vnT; // nz * 1
     arm_matrix_instance_f32 Rn; // nz * nz
     arm_matrix_instance_f32 K;  // nx * nz
     arm_matrix_instance_f32 KT; // nz * nx
@@ -95,9 +114,27 @@ arm_status correct_kalman_filter(KalmanFilter *kf, uint16_t numMeasuredStates, f
     arm_matrix_instance_f32 HPHTRn; // nz * nz
     arm_matrix_instance_f32 HPHTRnI; // nz * nz
 
+    arm_matrix_instance_f32 HxHat; // nz * 1
+    arm_matrix_instance_f32 znHxHat; // nz * 1
+    arm_matrix_instance_f32 KznHxHat; // nx * 1
+    arm_matrix_instance_f32 oldXhat; // nx * 1
+
+    arm_matrix_instance_f32 KH; // nx * nx
+    arm_matrix_instance_f32 I; // nx * nx
+    arm_matrix_instance_f32 IKH; // nx * nx
+    arm_matrix_instance_f32 IKHT; // nx * nx
+
+    arm_matrix_instance_f32 IKHP; // nx * nx
+    arm_matrix_instance_f32 IKHPIKHT; // nx * nx
+
+    arm_matrix_instance_f32 KR; // nx * nz
+    arm_matrix_instance_f32 KRKT; // nx * nx
+ 
     arm_mat_init_f32(&H, numMeasuredStates, kf->numStates, H_f32);
     arm_mat_init_f32(&HT, kf->numStates, numMeasuredStates, HT_f32);
-    arm_mat_init_f32(&vn, numMeasuredStates, 1, vn_f32);
+    arm_mat_init_f32(&zn, numMeasuredStates, 1, zn_f32);
+    arm_mat_init_f32(&vn, numMeasuredStates, 1, measurementStdDevs);
+    arm_mat_init_f32(&vnT, 1, numMeasuredStates, vnT_f32);
     arm_mat_init_f32(&Rn, numMeasuredStates, numMeasuredStates, Rn_f32);
     arm_mat_init_f32(&K, kf->numStates, numMeasuredStates, K_f32);
     arm_mat_init_f32(&KT, numMeasuredStates, kf->numStates, KT_f32);
@@ -105,17 +142,77 @@ arm_status correct_kalman_filter(KalmanFilter *kf, uint16_t numMeasuredStates, f
     arm_mat_init_f32(&PHT, kf->numStates, numMeasuredStates, PHT_f32);
     arm_mat_init_f32(&HPHT, numMeasuredStates, numMeasuredStates, HPHT_f32);
     arm_mat_init_f32(&HPHTRn, numMeasuredStates, numMeasuredStates, HPHTRn_f32);
+    arm_mat_init_f32(&HPHTRnI, numMeasuredStates, numMeasuredStates, HPHTRnI_f32);
 
-    arm_mat_trans_f32(&H, &HT);
+    arm_mat_init_f32(&HxHat, numMeasuredStates, 1, HxHat_f32);
+    arm_mat_init_f32(&znHxHat, numMeasuredStates, 1, znHxHat_f32);
+    arm_mat_init_f32(&KznHxHat, kf->numStates, 1, KznHxHat_f32);
 
-    arm_mat_mult_f32(&kf->P, &HT, &PHT);
-    arm_mat_mult_f32(&H, &PHT, &HPHT);
+    // Copying xHat may be unecessary if in-place operations are supported
+    for (uint16_t i = 0; i < kf->numStates; i++) {
+        oldXHat_f32[i] = kf->xHat.pData[i];
+    }
 
-    arm_mat_add_f32(&HPHT, &Rn, &HPHTRn);
+    arm_mat_init_f32(&oldXhat, kf->numStates, 1, oldXHat_f32);
 
-    arm_mat_inverse_f32(&HPHTRn, &HPHTRnI);
+    arm_mat_init_f32(&KH, kf->numStates, kf->numStates, KH_f32);
 
-    arm_mat_mult_f32(&PHT, &HPHTRnI, &K);
+    // Construct identity matrix
+    for (uint16_t i = 0; i < kf->numStates; i++) {
+        I_f32[i + i * kf->numStates] = 1;
+    }
+
+    arm_mat_init_f32(&I, kf->numStates, kf->numStates, I_f32);
+
+    arm_mat_init_f32(&IKH, kf->numStates, kf->numStates, IKH_f32);
+    arm_mat_init_f32(&IKHT, kf->numStates, kf->numStates, IKHT_f32);
+
+    arm_mat_init_f32(&IKHP, kf->numStates, kf->numStates, IKHP_f32);
+    arm_mat_init_f32(&IKHPIKHT, kf->numStates, kf->numStates, IKHPIKHT_f32);
+
+    arm_mat_init_f32(&KR, kf->numStates, numMeasuredStates, KR_f32);
+    arm_mat_init_f32(&KRKT, kf->numStates, kf->numStates, KRKT_f32);
+
+    // Note: Inverse operations modify the source matrix
+
+    // Compute measurement uncertainty matrix
+    result |= arm_mat_trans_f32(&vn, &vnT);
+
+    result |= arm_mat_mult_f32(&vn, &vnT, &Rn);
+
+    // Compute Kalman gain
+    result |= arm_mat_trans_f32(&H, &HT);
+
+    result |= arm_mat_mult_f32(&kf->P, &HT, &PHT);
+    result |= arm_mat_mult_f32(&H, &PHT, &HPHT);
+
+    result |= arm_mat_add_f32(&HPHT, &Rn, &HPHTRn);
+
+    result |= arm_mat_inverse_f32(&HPHTRn, &HPHTRnI);
+
+    result |= arm_mat_mult_f32(&PHT, &HPHTRnI, &K);
+
+    // Update estimate with measurement
+    result |= arm_mat_mult_f32(&H, &kf->xHat, &HxHat);
+
+    result |= arm_mat_sub_f32(&zn, &HxHat, &znHxHat);
+
+    result |= arm_mat_mult_f32(&K, &znHxHat, &KznHxHat);
+
+    result |= arm_mat_add_f32(&oldXhat, &KznHxHat, &kf->xHat);
+
+    // Update the estimate uncertainty
+    result |= arm_mat_mult_f32(&K, &H, &KH);
+    result |= arm_mat_sub_f32(&I, &KH, &IKH);
+    result |= arm_mat_trans_f32(&IKH, &IKHT);
+
+    result |= arm_mat_mult_f32(&IKH, &kf->P, &IKHP);
+    result |= arm_mat_mult_f32(&IKHP, &IKHT, &IKHPIKHT);
+
+    result |= arm_mat_trans_f32(&K, &KT);
+    result |= arm_mat_mult_f32(&KR, &KT, &KRKT);
+
+    result |= arm_mat_add_f32(&IKHPIKHT, &KRKT, &kf->P);
 
     return result;
 }
