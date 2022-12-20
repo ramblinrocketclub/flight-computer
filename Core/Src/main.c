@@ -177,42 +177,12 @@ int main(void)
 
             if (gps->gll.pos_mode != 'A')
             {
-                sprintf((char *) uart8_tx_data, "%c", gps->gll.pos_mode);
-                USART3_DMA1_Stream3_Write((uint8_t *) "Fix mode: ", strlen((char *) "Fix mode: "));
-                USART3_DMA1_Stream3_Write((uint8_t *) uart8_tx_data, strlen((char *) uart8_tx_data));
-                USART3_DMA1_Stream3_Write((uint8_t *) "\n", strlen((char *) "\n"));
+                LOG_INFO("Fix mode: %c", gps->gll.pos_mode);
                 continue;
             }
 
-            sprintf((char *) uart8_tx_data, "%lf", gps->gll.lat);
-            USART3_DMA1_Stream3_Write((uint8_t *) "Latitude: ", strlen((char *) "Latitude: "));
-            USART3_DMA1_Stream3_Write((uint8_t *) uart8_tx_data, strlen((char *) uart8_tx_data));
-
-            USART3_DMA1_Stream3_Write((uint8_t *) " ", strlen((char *) " "));
-
-            sprintf((char *) uart8_tx_data, "%c", gps->gll.ns);
-            USART3_DMA1_Stream3_Write((uint8_t *) "N/S: ", strlen((char *) "N/S: "));
-            USART3_DMA1_Stream3_Write((uint8_t *) uart8_tx_data, strlen((char *) uart8_tx_data));
-
-            USART3_DMA1_Stream3_Write((uint8_t *) " ", strlen((char *) " "));
-
-            sprintf((char *) uart8_tx_data, "%lf", gps->gll.lon);
-            USART3_DMA1_Stream3_Write((uint8_t *) "Longitude: ", strlen((char *) "Longitude: "));
-            USART3_DMA1_Stream3_Write((uint8_t *) uart8_tx_data, strlen((char *) uart8_tx_data));
-
-            USART3_DMA1_Stream3_Write((uint8_t *) " ", strlen((char *) " "));
-
-            sprintf((char *) uart8_tx_data, "%c", gps->gll.ew);
-            USART3_DMA1_Stream3_Write((uint8_t *) "E/W: ", strlen((char *) "E/W: "));
-            USART3_DMA1_Stream3_Write((uint8_t *) uart8_tx_data, strlen((char *) uart8_tx_data));
-
-            USART3_DMA1_Stream3_Write((uint8_t *) " ", strlen((char *) " "));
-
-            sprintf((char *) uart8_tx_data, "%ld", gps->gll.checksum);
-            USART3_DMA1_Stream3_Write((uint8_t *) "Checksum: ", strlen((char *) "Checksum: "));
-            USART3_DMA1_Stream3_Write((uint8_t *) uart8_tx_data, strlen((char *) uart8_tx_data));
-
-            USART3_DMA1_Stream3_Write((uint8_t *) "\n", strlen((char *) "\n"));
+            LOG_INFO("Latitude: %lf N/S: %c Longitude: %lf E/W: %c Checksum: %ld", 
+                    gps->gll.lat, gps->gll.ns, gps->gll.lon, gps->gll.ew, gps->gll.checksum);
         }
 	}
 }
