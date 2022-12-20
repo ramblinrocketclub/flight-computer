@@ -19,6 +19,7 @@
 #define BUFFER_FULL         (0x1UL)
 
 #define GPS_BUF_SIZE        512
+#define HGUIDE_BUF_SIZE     512
 
 #define SIZE(array)         (sizeof(array) / sizeof(array[0]))
 
@@ -26,7 +27,7 @@ void USART3_DMA1_Stream3_Write(uint8_t *data, uint16_t length);
 void USART3_DMA1_Stream1_Read(uint8_t *buffer, uint16_t length);
 void UART8_DMA1_Stream4_Write(uint8_t *data, uint16_t length);
 void UART8_DMA1_Stream0_Read(uint8_t *buffer, uint16_t length);
-void UART7_DMA1_Stream1_Read(uint8_t *buffer, uint16_t length);
+void UART7_DMA1_Stream2_Read(uint8_t *buffer, uint16_t length);
 
 uint8_t Is_USART3_Buffer_Full(void);
 uint8_t Is_UART8_Buffer_Full(void);
@@ -42,7 +43,7 @@ uint8_t uart7_rx_finished = 0;
 
 __attribute__ ((section(".buffer"), used)) uint8_t uart8_rx_data[GPS_BUF_SIZE];
 __attribute__ ((section(".buffer"), used)) uint8_t uart8_tx_data[GPS_BUF_SIZE];
-__attribute__ ((section(".buffer"), used)) uint8_t uart7_rx_data[1024];
+__attribute__ ((section(".buffer"), used)) uint8_t uart7_rx_data[HGUIDE_BUF_SIZE];
 
 
 int main(void)
@@ -52,6 +53,7 @@ int main(void)
     RCC->AHB4ENR |= RCC_AHB4ENR_GPIOBEN;                                    // enable GPIOB clock
     RCC->APB1LENR |= RCC_APB1LENR_USART3EN;                                 // enable USART3 clock
     RCC->APB1LENR |= RCC_APB1LENR_UART8EN;
+    RCC->APB1LENR |= RCC_APB1LENR_UART7EN;
     RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN;                                     // enable DMA1 clock
 
     GPIOD->MODER &= ~(GPIO_MODER_MODE8);
@@ -162,7 +164,11 @@ int main(void)
     ringbuf_t buffer;
     ringbuf_t *buf = &buffer;
 
+    ringbuf_t imu_data;
+    ringbuf_t *pImuData = &imu_data;
+
     ringbuf_init(buf, empty, SIZE(empty));
+    ringbuf_init(pImuData, empty, SIZE(empty));
 
     NVIC_EnableIRQ(DMA1_Stream0_IRQn);
     NVIC_EnableIRQ(DMA1_Stream3_IRQn);
@@ -171,6 +177,7 @@ int main(void)
     NVIC_EnableIRQ(DMA1_Stream4_IRQn);
 
     UART8_DMA1_Stream0_Read(uart8_rx_data, GPS_BUF_SIZE);
+    UART7_DMA1_Stream2_Read(uart7_rx_data, HGUIDE_BUF_SIZE);
 
     while(1)
     {
@@ -219,6 +226,11 @@ int main(void)
             USART3_DMA1_Stream3_Write((uint8_t *) uart8_tx_data, strlen((char *) uart8_tx_data));
 
             USART3_DMA1_Stream3_Write((uint8_t *) "\n", strlen((char *) "\n"));
+        }
+
+        if (Is_UART7_Buffer_Full())
+        {
+            USART3_DMA1_Stream3_Write((uint8_t *) uart7_rx_data, HGUIDE_BUF_SIZE);
         }
 	}
 }
