@@ -67,3 +67,55 @@ arm_status predict_kalman_filter(KalmanFilter *kf, float32_t *un_f32) {
 
     return result;
 }
+
+arm_status correct_kalman_filter(KalmanFilter *kf, uint16_t numMeasuredStates, float32_t *zn_f32, 
+                        float32_t *H_f32, float32_t *measurementStdDevs) {
+    arm_status result = ARM_MATH_SUCCESS;
+    
+    float32_t HT_f32[kf->numStates * numMeasuredStates];
+    float32_t vn_f32[numMeasuredStates];
+    float32_t Rn_f32[numMeasuredStates * numMeasuredStates];
+    float32_t K_f32[kf->numStates * numMeasuredStates];
+    float32_t KT_f32[numMeasuredStates * kf->numStates];
+
+    float32_t PHT_f32[kf->numStates * numMeasuredStates];
+    float32_t HPHT_f32[numMeasuredStates * numMeasuredStates];
+    float32_t HPHTRn_f32[numMeasuredStates * numMeasuredStates];
+
+    // P: nx * nx
+    arm_matrix_instance_f32 H;  // nz * nx
+    arm_matrix_instance_f32 HT; // nx * nz
+    arm_matrix_instance_f32 vn; // nz * 1
+    arm_matrix_instance_f32 Rn; // nz * nz
+    arm_matrix_instance_f32 K;  // nx * nz
+    arm_matrix_instance_f32 KT; // nz * nx
+
+    arm_matrix_instance_f32 PHT; // nx * nz
+    arm_matrix_instance_f32 HPHT; // nz * nz
+    arm_matrix_instance_f32 HPHTRn; // nz * nz
+    arm_matrix_instance_f32 HPHTRnI; // nz * nz
+
+    arm_mat_init_f32(&H, numMeasuredStates, kf->numStates, H_f32);
+    arm_mat_init_f32(&HT, kf->numStates, numMeasuredStates, HT_f32);
+    arm_mat_init_f32(&vn, numMeasuredStates, 1, vn_f32);
+    arm_mat_init_f32(&Rn, numMeasuredStates, numMeasuredStates, Rn_f32);
+    arm_mat_init_f32(&K, kf->numStates, numMeasuredStates, K_f32);
+    arm_mat_init_f32(&KT, numMeasuredStates, kf->numStates, KT_f32);
+    
+    arm_mat_init_f32(&PHT, kf->numStates, numMeasuredStates, PHT_f32);
+    arm_mat_init_f32(&HPHT, numMeasuredStates, numMeasuredStates, HPHT_f32);
+    arm_mat_init_f32(&HPHTRn, numMeasuredStates, numMeasuredStates, HPHTRn_f32);
+
+    arm_mat_trans_f32(&H, &HT);
+
+    arm_mat_mult_f32(&kf->P, &HT, &PHT);
+    arm_mat_mult_f32(&H, &PHT, &HPHT);
+
+    arm_mat_add_f32(&HPHT, &Rn, &HPHTRn);
+
+    arm_mat_inverse_f32(&HPHTRn, &HPHTRnI);
+
+    arm_mat_mult_f32(&PHT, &HPHTRnI, &K);
+
+    return result;
+}
