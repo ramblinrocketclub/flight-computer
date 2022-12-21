@@ -87,7 +87,7 @@ int main(void)
     GPIOB->AFR[0] |= (AF11 << 4 * 3);                                       // set PB3 to AF11 (UART7_RX)
     GPIOB->AFR[0] |= (AF11 << 4 * 4);                                       // set PB4 to AF11 (UART7_TX)
 
-    USART3->BRR = 0x0683;
+    USART3->BRR = 0x0010;
     USART3->CR1 = 0;
     USART3->CR3 |= (USART_CR3_DMAT) | (USART_CR3_DMAR);
     USART3->CR1 |= (USART_CR1_TE | USART_CR1_RE | USART_CR1_UE);
