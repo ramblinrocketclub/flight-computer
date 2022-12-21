@@ -109,7 +109,8 @@ AS_DEFS =
 
 # C defines
 C_DEFS =  \
--DSTM32H723xx
+-DSTM32H723xx \
+-DARM_MATH_CM7
 
 
 # AS includes
