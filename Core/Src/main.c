@@ -10,6 +10,7 @@
 #include "stm32h7xx_ll_dma.h"
 #include "ringbuffer.h"
 #include "gps.h"
+#include "hguide_imu.h"
 
 #define AF07                (0x7UL)
 #define AF08                (0x8UL)
