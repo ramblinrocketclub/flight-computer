@@ -48,6 +48,38 @@ __attribute__ ((section(".buffer"), used)) uint8_t uart8_rx_data[GPS_BUF_SIZE];
 __attribute__ ((section(".buffer"), used)) uint8_t uart8_tx_data[GPS_BUF_SIZE];
 __attribute__ ((section(".buffer"), used)) uint8_t uart7_rx_data[1024];
 
+void print_matrix(arm_matrix_instance_f32 *A, const char *name) {
+	int row;
+	int col;
+
+	LOG_INFO("%s Matrix:", name);
+
+	_LOG_INFO("[");
+
+	for (row = 0; row < A->numRows; row++) {
+		if (row > 0) {
+			_LOG_INFO(" ");
+		}
+
+		_LOG_INFO("[");
+
+		for (col = 0; col < A->numCols; col++) {
+			if (col < A->numCols - 1) {
+				_LOG_INFO("% 15.5f, ", A->pData[row * A->numCols + col]);
+			} else {
+				_LOG_INFO("% 15.5f", A->pData[row * A->numCols + col]);
+			}
+		}
+
+		if (row < A->numRows - 1) {
+			LOG_INFO("],");
+		} else {
+			_LOG_INFO("]");
+		}
+	}
+
+	LOG_INFO("]");
+}
 
 int main(void)
 {
@@ -167,43 +199,83 @@ int main(void)
 
     UART8_DMA1_Stream0_Read(uart8_rx_data, GPS_BUF_SIZE);
 
-    LOG_INFO("Initialization successful %d", 123);
+    LOG_INFO("Hardware initialization successful %d", 69420);
 
+	// Basic kalman filter for constant accelerating body
+	KalmanFilter kf;
+	arm_status status = ARM_MATH_SUCCESS;
 
-    // Basic kalman filter for constant accelerating body
-    KalmanFilter kf;
+	const float accelStd = 0.1;
+	const float accelVar = accelStd * accelStd;
 
-    float32_t F_f32[4] = {
-        1, DT_SECONDS,
-        0, 1
-    };
+	float32_t F_f32[4] = {
+		1, DT_SECONDS,
+		0, 1
+	};
 
-    float32_t G_f32[2] = {
-        0.5 * DT_SECONDS * DT_SECONDS,
-        DT_SECONDS
-    };
+	float32_t G_f32[2] = {
+		0.5 * DT_SECONDS * DT_SECONDS,
+		DT_SECONDS
+	};
 
-    float32_t P_f32[4] = {
-        0.04, 0.04,
-        0.04, 0.04
-    };
+	float32_t P_f32[4] = {
+			500, 0,
+			0, 500
+	};
 
-    float32_t Q_f32[4] = {
-        0, 0,
-        0, 0
-    };
+	float32_t Q_f32[4] = {
+			1.0, 1.0,
+			1.0, 1.0
+	};
 
-    float32_t xHat_f32[2] = {
-        // Position, velocity
-        0, 0
-    };
+	float32_t xHat_f32[2] = {
+		// Position, velocity
+		0, 0
+	};
 
-    float32_t stateStdDevs_f32[2] = {
-        // Position std, velocity std
-        0.02, 0.02
-    };
+	float32_t stateStdDevs_f32[2] = {
+		// Position std, velocity std
+		DT_SECONDS * DT_SECONDS / 2.0 * accelVar, DT_SECONDS * accelVar
+	};
 
-    init_kalman_filter(&kf, 2, 1, &F_f32[0], &G_f32[0], &P_f32[0], &Q_f32[0], &xHat_f32[0], &stateStdDevs_f32[0]);
+	status = init_kalman_filter(&kf, 2, 1, &F_f32[0], &G_f32[0], &P_f32[0], &Q_f32[0], &xHat_f32[0], &stateStdDevs_f32[0]);
+
+	print_matrix(&kf.Q, "Q");
+	LOG_INFO("Kalman initialization status: %d", status);
+
+	float32_t un_f32[1] = { 9.8 };
+
+	status = predict_kalman_filter(&kf, un_f32);
+
+	print_matrix(&kf.xHat, "xHat");
+	print_matrix(&kf.P, "P");
+	LOG_INFO("Step 1 predict status: %d", status);
+
+	float32_t zn_f32[1] = { -32.40 };
+	float32_t H_f32[2] = { 1, 0 };
+	float32_t measurementStdDevs[1] = { 20 };
+
+	status = correct_kalman_filter(&kf, 1, zn_f32, H_f32, measurementStdDevs);
+
+	print_matrix(&kf.xHat, "xHat");
+	print_matrix(&kf.P, "P");
+	LOG_INFO("Step 1 correct status: %d", status);
+
+	un_f32[0] = 39.72 - 9.8;
+
+	status = predict_kalman_filter(&kf, un_f32);
+
+	print_matrix(&kf.xHat, "xHat");
+	print_matrix(&kf.P, "P");
+	LOG_INFO("Step 2 predict status: %d", status);
+
+	zn_f32[0] = -11.1;
+
+	status = correct_kalman_filter(&kf, 1, zn_f32, H_f32, measurementStdDevs);
+
+	print_matrix(&kf.xHat, "xHat");
+	print_matrix(&kf.P, "P");
+	LOG_INFO("Step 2 correct status: %d", status);
 
     while(1)
     {

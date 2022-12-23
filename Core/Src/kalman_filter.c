@@ -210,6 +210,7 @@ arm_status correct_kalman_filter(KalmanFilter *kf, uint16_t numMeasuredStates, f
     result |= arm_mat_mult_f32(&IKHP, &IKHT, &IKHPIKHT);
 
     result |= arm_mat_trans_f32(&K, &KT);
+    result |= arm_mat_mult_f32(&K, &Rn, &KR);
     result |= arm_mat_mult_f32(&KR, &KT, &KRKT);
 
     result |= arm_mat_add_f32(&IKHPIKHT, &KRKT, &kf->P);
