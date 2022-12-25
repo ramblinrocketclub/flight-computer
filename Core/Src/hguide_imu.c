@@ -165,27 +165,116 @@ uint8_t DeserializeMessageA2(ringbuf_t *data, MessageA2_t *message_a2)
     return 0;
 }
 
-uint8_t ProcessHGuidei300(ringbuf_t *data)
+uint8_t ProcessHGuidei300(HGuidei300Imu_t *imu, ringbuf_t *data)
 {
-    if ((data->end - data->start + data->size) % data->size < 20)
-    {
-        return 1;
-    }
+    // while (1)
+    // {
+        if ((data->end - data->start + data->size) % data->size < 20)
+        {
+            return 1;
+            // break;
+        }
 
-    if (data->buf[data->start] == 0x0E && data->buf[data->start + 1] == 0xA1)
-    {
-        MessageA1_t _control_message;
-        MessageA1_t *control_message = &_control_message;
-        DeserializeMessageA1(data, control_message);
-    }
+        if (data->buf[data->start] == 0x0E && data->buf[data->start + 1] == 0xA1)
+        {
+            MessageA1_t _control_message;
+            MessageA1_t *control_message = &_control_message;
+            DeserializeMessageA1(data, control_message);
 
-    else if (data->buf[data->start] == 0x0E && data->buf[data->start + 1] == 0xA2)
-    {
-        MessageA2_t _inertial_message;
-        MessageA2_t *inertial_message = &_inertial_message;
-        DeserializeMessageA2(data, inertial_message);
-    }
+            imu->angular_rate_x         = control_message->angular_rate_x;
+            imu->angular_rate_y         = control_message->angular_rate_y;
+            imu->angular_rate_z         = control_message->angular_rate_z;
+            imu->linear_acceleration_x  = control_message->linear_acceleration_x;
+            imu->linear_acceleration_y  = control_message->linear_acceleration_y;
+            imu->linear_acceleration_z  = control_message->linear_acceleration_z;
+        }
+
+        else if (data->buf[data->start] == 0x0E && data->buf[data->start + 1] == 0xA2)
+        {
+            MessageA2_t _inertial_message;
+            MessageA2_t *inertial_message = &_inertial_message;
+            DeserializeMessageA2(data, inertial_message);
+
+            imu->angular_rate_x         = inertial_message->angular_rate_x;
+            imu->angular_rate_y         = inertial_message->angular_rate_y;
+            imu->angular_rate_z         = inertial_message->angular_rate_z;
+            imu->linear_acceleration_x  = inertial_message->linear_acceleration_x;
+            imu->linear_acceleration_y  = inertial_message->linear_acceleration_y;
+            imu->linear_acceleration_z  = inertial_message->linear_acceleration_z;
+            imu->delta_angle_x          = inertial_message->delta_angle_x;
+            imu->delta_angle_y          = inertial_message->delta_angle_y;
+            imu->delta_angle_z          = inertial_message->delta_angle_z;
+            imu->delta_velocity_x       = inertial_message->delta_velocity_x;
+            imu->delta_velocity_y       = inertial_message->delta_velocity_y;
+            imu->delta_velocity_z       = inertial_message->delta_velocity_z;
+        }
+
+        else
+        {
+            ringbuf_get(data);
+        }
+    // }
 
     return 0;
+}
+
+double  GetAngularRateX(HGuidei300Imu_t *imu)
+{
+    return imu->angular_rate_x;
+}
+
+double  GetAngularRateY(HGuidei300Imu_t *imu)
+{
+    return imu->angular_rate_y;
+}
+
+double  GetAngularRateZ(HGuidei300Imu_t *imu)
+{
+    return imu->angular_rate_z;
+}
+
+double  GetLinearAccelerationX(HGuidei300Imu_t *imu)
+{
+    return imu->linear_acceleration_x;
+}
+
+double  GetLinearAccelerationY(HGuidei300Imu_t *imu)
+{
+    return imu->linear_acceleration_y;
+}
+
+double  GetLinearAccelerationZ(HGuidei300Imu_t *imu)
+{
+    return imu->linear_acceleration_z;
+}
+
+double  GetDeltaAngleX(HGuidei300Imu_t *imu)
+{
+    return imu->delta_angle_x;
+}
+
+double  GetDeltaAngleY(HGuidei300Imu_t *imu)
+{
+    return imu->delta_angle_y;
+}
+
+double  GetDeltaAngleZ(HGuidei300Imu_t *imu)
+{
+    return imu->delta_angle_z;
+}
+
+double  GetDeltaVelocityX(HGuidei300Imu_t *imu)
+{
+    return imu->delta_velocity_x;
+}
+
+double  GetDeltaVelocityY(HGuidei300Imu_t *imu)
+{
+    return imu->delta_velocity_y;
+}
+
+double  GetDeltaVelocityZ(HGuidei300Imu_t *imu)
+{
+    return imu->delta_velocity_z;
 }
 

@@ -2,6 +2,7 @@
 #define HGUIDE_IMU_H
 
 #include <stdbool.h>
+#include "ringbuffer.h"
 
 typedef enum
 {
@@ -101,13 +102,33 @@ typedef struct
 
 typedef struct
 {
-    MessageA1_t message_a1;
-    MessageA2_t message_a2;
+    double angular_rate_x;
+    double angular_rate_y;
+    double angular_rate_z;
+    double linear_acceleration_x;
+    double linear_acceleration_y;
+    double linear_acceleration_z;
+    double delta_angle_x;
+    double delta_angle_y;
+    double delta_angle_z;
+    double delta_velocity_x;
+    double delta_velocity_y;
+    double delta_velocity_z;
 } HGuidei300Imu_t;
 
-uint8_t DeserializeMessageA1(ringbuf_t *data, MessageA1_t *message_a1);
-uint8_t ProcessHGuidei300(ringbuf_t *data);
-
+uint8_t ProcessHGuidei300(HGuidei300Imu_t *imu, ringbuf_t *data);
+double  GetAngularRateX(HGuidei300Imu_t *imu);
+double  GetAngularRateY(HGuidei300Imu_t *imu);
+double  GetAngularRateZ(HGuidei300Imu_t *imu);
+double  GetLinearAccelerationX(HGuidei300Imu_t *imu);
+double  GetLinearAccelerationY(HGuidei300Imu_t *imu);
+double  GetLinearAccelerationZ(HGuidei300Imu_t *imu);
+double  GetDeltaAngleX(HGuidei300Imu_t *imu);
+double  GetDeltaAngleY(HGuidei300Imu_t *imu);
+double  GetDeltaAngleZ(HGuidei300Imu_t *imu);
+double  GetDeltaVelocityX(HGuidei300Imu_t *imu);
+double  GetDeltaVelocityY(HGuidei300Imu_t *imu);
+double  GetDeltaVelocityZ(HGuidei300Imu_t *imu);
 
 #endif /* HGUIDE_IMU_H */
 

@@ -45,6 +45,7 @@ uint8_t uart7_rx_finished = 0;
 __attribute__ ((section(".buffer"), used)) uint8_t uart8_rx_data[GPS_BUF_SIZE];
 __attribute__ ((section(".buffer"), used)) uint8_t uart8_tx_data[GPS_BUF_SIZE];
 __attribute__ ((section(".buffer"), used)) uint8_t uart7_rx_data[HGUIDE_BUF_SIZE];
+__attribute__ ((section(".buffer"), used)) uint8_t uart7_tx_data[HGUIDE_BUF_SIZE];
 
 
 int main(void)
@@ -160,16 +161,19 @@ int main(void)
     GPS_Handle gps_struct;
     GPS_Handle *gps = &gps_struct;
 
+    HGuidei300Imu_t hguide_i300_imu;
+    HGuidei300Imu_t *pHGuidei300Imu = &hguide_i300_imu;
+
     uint8_t empty[2048] = {[0 ... 2047] = 0};
 
     ringbuf_t buffer;
     ringbuf_t *buf = &buffer;
 
     ringbuf_t imu_data;
-    ringbuf_t *pImuData = &imu_data;
+    ringbuf_t *pHGuidei300ImuData = &imu_data;
 
     ringbuf_init(buf, empty, SIZE(empty));
-    ringbuf_init(pImuData, empty, SIZE(empty));
+    ringbuf_init(pHGuidei300ImuData, empty, SIZE(empty));
 
     NVIC_EnableIRQ(DMA1_Stream0_IRQn);
     NVIC_EnableIRQ(DMA1_Stream3_IRQn);
@@ -185,7 +189,9 @@ int main(void)
         if (Is_UART8_Buffer_Full())
         {
             for (int i = 0; i < SIZE(uart8_rx_data); i++)
+            {
                 ringbuf_put(buf, uart8_rx_data[i]);
+            }
 
             parse_nmea_packet(gps, buf, 1, "GNGLL");
 
@@ -231,8 +237,19 @@ int main(void)
 
         if (Is_UART7_Buffer_Full())
         {
-            USART3_DMA1_Stream3_Write((uint8_t *) uart7_rx_data, HGUIDE_BUF_SIZE);
+            for (int i = 0; i < SIZE(uart7_rx_data); i++)
+            {
+                ringbuf_put(pHGuidei300ImuData, uart7_rx_data[i]);
+            }
+
+            ProcessHGuidei300(pHGuidei300Imu, pHGuidei300ImuData);
+
+            sprintf((char *) uart7_tx_data, "%lf", GetLinearAccelerationX(pHGuidei300Imu));
+            USART3_DMA1_Stream3_Write((uint8_t *) "Linear Acceleration X: ", strlen((char *) "Linear Acceleration X: "));
+            USART3_DMA1_Stream3_Write((uint8_t *) uart7_tx_data, strlen((char *) uart7_tx_data));
+            USART3_DMA1_Stream3_Write((uint8_t *) "\n", strlen((char *) "\n"));
         }
+
 	}
 }
 
