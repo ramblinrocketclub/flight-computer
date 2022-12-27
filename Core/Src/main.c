@@ -24,28 +24,28 @@
 
 #define SIZE(array)         (sizeof(array) / sizeof(array[0]))
 
-void USART3_DMA1_Stream3_Write(uint8_t *data, uint16_t length);
-void USART3_DMA1_Stream1_Read(uint8_t *buffer, uint16_t length);
-void UART8_DMA1_Stream4_Write(uint8_t *data, uint16_t length);
-void UART8_DMA1_Stream0_Read(uint8_t *buffer, uint16_t length);
-void UART7_DMA1_Stream2_Read(uint8_t *buffer, uint16_t length);
+void USART3_DMA1_Stream3_Write(volatile uint8_t *data, uint16_t length);
+void USART3_DMA1_Stream1_Read(volatile uint8_t *buffer, uint16_t length);
+void UART8_DMA1_Stream4_Write(volatile uint8_t *data, uint16_t length);
+void UART8_DMA1_Stream0_Read(volatile uint8_t *buffer, uint16_t length);
+void UART7_DMA1_Stream2_Read(volatile uint8_t *buffer, uint16_t length);
 
 uint8_t Is_USART3_Buffer_Full(void);
 uint8_t Is_UART8_Buffer_Full(void);
 uint8_t Is_UART7_Buffer_Full(void);
 
-uint8_t usart3_tx_finished = 0;
-uint8_t usart3_rx_finished = 0;
-uint8_t uart8_tx_finished = 0;
-uint8_t uart8_rx_finished = 0;
-uint8_t uart7_tx_finished = 0;
-uint8_t uart7_rx_finished = 0;
+volatile uint8_t usart3_tx_finished = 0;
+volatile uint8_t usart3_rx_finished = 0;
+volatile uint8_t uart8_tx_finished = 0;
+volatile uint8_t uart8_rx_finished = 0;
+volatile uint8_t uart7_tx_finished = 0;
+volatile uint8_t uart7_rx_finished = 0;
 
 
-__attribute__ ((section(".buffer"), used)) uint8_t uart8_rx_data[GPS_BUF_SIZE];
-__attribute__ ((section(".buffer"), used)) uint8_t uart8_tx_data[GPS_BUF_SIZE];
-__attribute__ ((section(".buffer"), used)) uint8_t uart7_rx_data[HGUIDE_BUF_SIZE];
-__attribute__ ((section(".buffer"), used)) uint8_t uart7_tx_data[HGUIDE_BUF_SIZE];
+__attribute__ ((section(".buffer"), used)) volatile uint8_t uart8_rx_data[GPS_BUF_SIZE];
+__attribute__ ((section(".buffer"), used)) volatile uint8_t uart8_tx_data[GPS_BUF_SIZE];
+__attribute__ ((section(".buffer"), used)) volatile uint8_t uart7_rx_data[HGUIDE_BUF_SIZE];
+__attribute__ ((section(".buffer"), used)) volatile uint8_t uart7_tx_data[HGUIDE_BUF_SIZE];
 
 
 int main(void)
@@ -164,7 +164,8 @@ int main(void)
     HGuidei300Imu_t hguide_i300_imu;
     HGuidei300Imu_t *pHGuidei300Imu = &hguide_i300_imu;
 
-    uint8_t empty[2048] = {[0 ... 2047] = 0};
+    uint8_t empty1[2048] = {[0 ... 2047] = 0};
+    uint8_t empty2[2048] = {[0 ... 2047] = 0};
 
     ringbuf_t buffer;
     ringbuf_t *buf = &buffer;
@@ -172,8 +173,8 @@ int main(void)
     ringbuf_t imu_data;
     ringbuf_t *pHGuidei300ImuData = &imu_data;
 
-    ringbuf_init(buf, empty, SIZE(empty));
-    ringbuf_init(pHGuidei300ImuData, empty, SIZE(empty));
+    ringbuf_init(buf, empty1, SIZE(empty1));
+    ringbuf_init(pHGuidei300ImuData, empty1, SIZE(empty1));
 
     NVIC_EnableIRQ(DMA1_Stream0_IRQn);
     NVIC_EnableIRQ(DMA1_Stream3_IRQn);
@@ -237,6 +238,7 @@ int main(void)
 
         if (Is_UART7_Buffer_Full())
         {
+            // USART3_DMA1_Stream3_Write((uint8_t *) "hi\n", strlen((char *) "hi\n"));
             for (int i = 0; i < SIZE(uart7_rx_data); i++)
             {
                 ringbuf_put(pHGuidei300ImuData, uart7_rx_data[i]);
@@ -244,16 +246,18 @@ int main(void)
 
             ProcessHGuidei300(pHGuidei300Imu, pHGuidei300ImuData);
 
-            sprintf((char *) uart7_tx_data, "%lf", GetLinearAccelerationX(pHGuidei300Imu));
+            // sprintf((char *) uart7_tx_data, "%lf", GetLinearAccelerationX(pHGuidei300Imu));
+            sprintf((char *) uart7_tx_data, "%lf", pHGuidei300Imu->linear_acceleration_x);
             USART3_DMA1_Stream3_Write((uint8_t *) "Linear Acceleration X: ", strlen((char *) "Linear Acceleration X: "));
             USART3_DMA1_Stream3_Write((uint8_t *) uart7_tx_data, strlen((char *) uart7_tx_data));
             USART3_DMA1_Stream3_Write((uint8_t *) "\n", strlen((char *) "\n"));
         }
-
+//        sprintf((char *) uart7_tx_data, "%s", "Hello word\n");
+//        USART3_DMA1_Stream3_Write((uint8_t *) uart7_tx_data, strlen((char *) uart7_tx_data));
 	}
 }
 
-void USART3_DMA1_Stream3_Write(uint8_t *data, uint16_t length)
+void USART3_DMA1_Stream3_Write(volatile uint8_t *data, uint16_t length)
 {
     DMA1_Stream3->M0AR = (uint32_t) data;
     DMA1_Stream3->NDTR = length;
@@ -263,14 +267,14 @@ void USART3_DMA1_Stream3_Write(uint8_t *data, uint16_t length)
 }
 
 
-void USART3_DMA1_Stream1_Read(uint8_t *buffer, uint16_t length)
+void USART3_DMA1_Stream1_Read(volatile uint8_t *buffer, uint16_t length)
 {
     DMA1_Stream1->M0AR = (uint32_t) buffer;
     DMA1_Stream1->NDTR = length;
     DMA1_Stream1->CR |= DMA_SxCR_EN;
 }
 
-void UART8_DMA1_Stream4_Write(uint8_t *data, uint16_t length)
+void UART8_DMA1_Stream4_Write(volatile uint8_t *data, uint16_t length)
 {
     DMA1_Stream4->M0AR = (uint32_t) data;
     DMA1_Stream4->NDTR = length;
@@ -279,14 +283,14 @@ void UART8_DMA1_Stream4_Write(uint8_t *data, uint16_t length)
     uart8_tx_finished = 0;
 }
 
-void UART8_DMA1_Stream0_Read(uint8_t *buffer, uint16_t length)
+void UART8_DMA1_Stream0_Read(volatile uint8_t *buffer, uint16_t length)
 {
     DMA1_Stream0->M0AR = (uint32_t) buffer;
     DMA1_Stream0->NDTR = length;
     DMA1_Stream0->CR |= DMA_SxCR_EN;
 }
 
-void UART7_DMA1_Stream2_Read(uint8_t *buffer, uint16_t length)
+void UART7_DMA1_Stream2_Read(volatile uint8_t *buffer, uint16_t length)
 {
     DMA1_Stream2->M0AR = (uint32_t) buffer;
     DMA1_Stream2->NDTR = length;

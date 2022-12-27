@@ -22,7 +22,7 @@ TARGET = GTXR
 # debug build?
 DEBUG = 1
 # optimization
-OPT = -Og
+OPT = -O3
 
 
 #######################################

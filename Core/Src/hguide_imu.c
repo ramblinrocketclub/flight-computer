@@ -167,12 +167,12 @@ uint8_t DeserializeMessageA2(ringbuf_t *data, MessageA2_t *message_a2)
 
 uint8_t ProcessHGuidei300(HGuidei300Imu_t *imu, ringbuf_t *data)
 {
-    // while (1)
-    // {
+    while (1)
+    {
         if ((data->end - data->start + data->size) % data->size < 20)
         {
-            return 1;
-            // break;
+            // return 1;
+            break;
         }
 
         if (data->buf[data->start] == 0x0E && data->buf[data->start + 1] == 0xA1)
@@ -213,7 +213,7 @@ uint8_t ProcessHGuidei300(HGuidei300Imu_t *imu, ringbuf_t *data)
         {
             ringbuf_get(data);
         }
-    // }
+    }
 
     return 0;
 }
