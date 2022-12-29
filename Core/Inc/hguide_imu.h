@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include "ringbuffer.h"
+#include "ringbuffer_new.h"
 
 typedef enum
 {
@@ -116,7 +117,8 @@ typedef struct
     double delta_velocity_z;
 } HGuidei300Imu_t;
 
-uint8_t ProcessHGuidei300(HGuidei300Imu_t *imu, ringbuf_t *data);
+//uint8_t ProcessHGuidei300(HGuidei300Imu_t *imu, ringbuf_t *data);
+uint8_t ProcessHGuidei300(HGuidei300Imu_t *imu, RingBuffer_t *data);
 double  GetAngularRateX(HGuidei300Imu_t *imu);
 double  GetAngularRateY(HGuidei300Imu_t *imu);
 double  GetAngularRateZ(HGuidei300Imu_t *imu);
@@ -129,6 +131,8 @@ double  GetDeltaAngleZ(HGuidei300Imu_t *imu);
 double  GetDeltaVelocityX(HGuidei300Imu_t *imu);
 double  GetDeltaVelocityY(HGuidei300Imu_t *imu);
 double  GetDeltaVelocityZ(HGuidei300Imu_t *imu);
+
+
 
 #endif /* HGUIDE_IMU_H */
 

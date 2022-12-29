@@ -170,11 +170,11 @@ int main(void)
     ringbuf_t buffer;
     ringbuf_t *buf = &buffer;
 
-    ringbuf_t imu_data;
-    ringbuf_t *pHGuidei300ImuData = &imu_data;
+    RingBuffer_t imu_data;
+    RingBuffer_t *pHGuidei300ImuData = &imu_data;
 
     ringbuf_init(buf, empty1, SIZE(empty1));
-    ringbuf_init(pHGuidei300ImuData, empty1, SIZE(empty1));
+    RingBuffer_Init(pHGuidei300ImuData, empty1, SIZE(empty1));
 
     NVIC_EnableIRQ(DMA1_Stream0_IRQn);
     NVIC_EnableIRQ(DMA1_Stream3_IRQn);
@@ -238,24 +238,12 @@ int main(void)
 
         if (Is_UART7_Buffer_Full())
         {
-            for (int i = 0; i < SIZE(uart7_rx_data); i++)
-            {
-                ringbuf_put(pHGuidei300ImuData, uart7_rx_data[i]);
-            }
-
-            ProcessHGuidei300(pHGuidei300Imu, pHGuidei300ImuData);
-            ProcessHGuidei300(pHGuidei300Imu, pHGuidei300ImuData);
-            ProcessHGuidei300(pHGuidei300Imu, pHGuidei300ImuData);
-            ProcessHGuidei300(pHGuidei300Imu, pHGuidei300ImuData);
-            ProcessHGuidei300(pHGuidei300Imu, pHGuidei300ImuData);
+            RingBuffer_Put(pHGuidei300ImuData, (uint8_t *) uart7_rx_data, SIZE(uart7_rx_data));
             ProcessHGuidei300(pHGuidei300Imu, pHGuidei300ImuData);
 
-
-            // sprintf((char *) uart7_tx_data, "%lf", GetLinearAccelerationX(pHGuidei300Imu));
-            sprintf((char *) uart7_tx_data, "%lf", pHGuidei300Imu->linear_acceleration_x);
-            USART3_DMA1_Stream3_Write((uint8_t *) "Linear Acceleration X: ", strlen((char *) "Linear Acceleration X: "));
+            sprintf((char *) uart7_tx_data, "%lf", GetLinearAccelerationX(pHGuidei300Imu));
             USART3_DMA1_Stream3_Write((uint8_t *) uart7_tx_data, strlen((char *) uart7_tx_data));
-            USART3_DMA1_Stream3_Write((uint8_t *) "\r", strlen((char *) "\r"));
+            USART3_DMA1_Stream3_Write((uint8_t *) "\n", strlen((char *) "\n"));
         }
 	}
 }
