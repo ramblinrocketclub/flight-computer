@@ -26,6 +26,54 @@
 
 #define SIZE(array)         (sizeof(array) / sizeof(array[0]))
 
+// Daylight savings defs
+#define RTC_DAYLIGHTSAVING_SUB1H       RTC_CR_SUB1H
+#define RTC_DAYLIGHTSAVING_ADD1H       RTC_CR_ADD1H
+#define RTC_DAYLIGHTSAVING_NONE        0x00000000u
+
+// Store operation defs
+#define RTC_STOREOPERATION_RESET        0x00000000u
+#define RTC_STOREOPERATION_SET          RTC_CR_BKP
+
+// Months
+#define RTC_MONTH_JANUARY                   ((uint8_t)0x01)
+#define RTC_MONTH_FEBRUARY                  ((uint8_t)0x02)
+#define RTC_MONTH_MARCH                     ((uint8_t)0x03)
+#define RTC_MONTH_APRIL                     ((uint8_t)0x04)
+#define RTC_MONTH_MAY                       ((uint8_t)0x05)
+#define RTC_MONTH_JUNE                      ((uint8_t)0x06)
+#define RTC_MONTH_JULY                      ((uint8_t)0x07)
+#define RTC_MONTH_AUGUST                    ((uint8_t)0x08)
+#define RTC_MONTH_SEPTEMBER                 ((uint8_t)0x09)
+#define RTC_MONTH_OCTOBER                   ((uint8_t)0x10)
+#define RTC_MONTH_NOVEMBER                  ((uint8_t)0x11)
+#define RTC_MONTH_DECEMBER                  ((uint8_t)0x12)
+
+// Days of week
+#define RTC_WEEKDAY_MONDAY                  ((uint8_t)0x01)
+#define RTC_WEEKDAY_TUESDAY                 ((uint8_t)0x02)
+#define RTC_WEEKDAY_WEDNESDAY               ((uint8_t)0x03)
+#define RTC_WEEKDAY_THURSDAY                ((uint8_t)0x04)
+#define RTC_WEEKDAY_FRIDAY                  ((uint8_t)0x05)
+#define RTC_WEEKDAY_SATURDAY                ((uint8_t)0x06)
+#define RTC_WEEKDAY_SUNDAY                  ((uint8_t)0x07)
+
+#define RTC_TR_RESERVED_MASK    (RTC_TR_PM  | RTC_TR_HT | RTC_TR_HU | \
+                                 RTC_TR_MNT | RTC_TR_MNU| RTC_TR_ST | \
+                                 RTC_TR_SU)
+
+#define RTC_DR_RESERVED_MASK    (RTC_DR_YT | RTC_DR_YU | RTC_DR_WDU | \
+                                 RTC_DR_MT | RTC_DR_MU | RTC_DR_DT  | \
+                                 RTC_DR_DU)
+
+typedef struct RTCTimeBuffer {
+    uint8_t hours;
+    uint8_t minutes;
+    uint8_t seconds;
+    uint8_t subSeconds;
+    uint8_t secondFraction;
+} RTCTimeBuffer;
+
 void USART3_DMA1_Stream3_Write(uint8_t *data, uint16_t length);
 void USART3_DMA1_Stream1_Read(uint8_t *buffer, uint16_t length);
 void UART8_DMA1_Stream4_Write(uint8_t *data, uint16_t length);
@@ -35,6 +83,9 @@ void UART7_DMA1_Stream1_Read(uint8_t *buffer, uint16_t length);
 uint8_t Is_USART3_Buffer_Full(void);
 uint8_t Is_UART8_Buffer_Full(void);
 uint8_t Is_UART7_Buffer_Full(void);
+
+uint8_t convertBCDToBinary(const uint8_t value);
+void readRTCTimeBuffer(RTCTimeBuffer *buffer);
 
 uint8_t usart3_tx_finished = 0;
 uint8_t usart3_rx_finished = 0;
@@ -83,6 +134,23 @@ void print_matrix(arm_matrix_instance_f32 *A, const char *name) {
 
 int main(void)
 {
+    // RTC config constants
+    // All config constants are in BCD format
+    static const uint8_t hours = 0x10;
+    static const uint8_t minutes = 0x20;
+    static const uint8_t seconds = 0x30;
+
+    static const uint8_t year = 0x22;
+    static const uint8_t month = RTC_MONTH_NOVEMBER;
+    static const uint8_t date = 0x19;
+    static const uint8_t weekday = RTC_WEEKDAY_SATURDAY;
+
+    // Temporary registers
+    uint32_t tmpreg;
+
+    // Buffer for holding time data
+    RTCTimeBuffer timeBuffer;
+
     RCC->AHB4ENR |= RCC_AHB4ENR_GPIODEN;                                    // enable GPIOD clock
     RCC->AHB4ENR |= RCC_AHB4ENR_GPIOEEN;
     RCC->AHB4ENR |= RCC_AHB4ENR_GPIOBEN;
@@ -199,6 +267,70 @@ int main(void)
 
     UART8_DMA1_Stream0_Read(uart8_rx_data, GPS_BUF_SIZE);
 
+    // Disable RTC write protection
+    RTC->WPR = 0xCAU;
+    RTC->WPR = 0x53U;
+
+    // Set initialiation mode
+    RTC->ISR = RTC_ISR_INIT_Msk;
+
+    // Wait until initialization mode entered
+    while ((RTC->ISR & RTC_ISR_INITF) == 0U);
+
+    RTC->CR &= ~(RTC_CR_FMT | RTC_CR_OSEL | RTC_CR_POL);
+
+    // Configure 24 hour time, no output, high output polarity
+    RTC->CR |= RTC_CR_POL;
+
+    // Asynchronous predivider = 127, Sychronous predivider = 1023
+    RTC->PRER = (127 << RTC_PRER_PREDIV_A_Pos) | (1023 << RTC_PRER_PREDIV_S_Pos);
+
+    tmpreg = (((uint32_t)(hours) << RTC_TR_HU_Pos)  | \
+                ((uint32_t)(minutes) << RTC_TR_MNU_Pos) | \
+                ((uint32_t)(seconds) << RTC_TR_SU_Pos)  | \
+                ((uint32_t)(0x00U) << RTC_TR_PM_Pos));
+
+    RTC->TR = (uint32_t)(tmpreg & RTC_TR_RESERVED_MASK);
+
+    // No DST
+    RTC->CR &= ((uint32_t)~RTC_CR_BKP);
+    RTC->CR |= (uint32_t)(RTC_DAYLIGHTSAVING_NONE | RTC_STOREOPERATION_RESET);
+
+    // Set date
+    tmpreg = ((((uint32_t)year)    << RTC_DR_YU_Pos) | \
+                  (((uint32_t)month)   << RTC_DR_MU_Pos) | \
+                  (((uint32_t)date)    << RTC_DR_DU_Pos) | \
+                  (((uint32_t)weekday) << RTC_DR_WDU_Pos));
+
+    RTC->DR = (uint32_t)(tmpreg & RTC_DR_RESERVED_MASK);
+
+    // Exit init mode
+    RTC->ISR &= ~(RTC_ISR_INITF);
+
+    if ((RTC_CR_BYPSHAD & RTC->CR) == 0U) {
+        RTC->ISR &= (uint32_t)RTC_ISR_RSF_Msk;
+
+        // Wait for register to be synchronized
+        while ((RTC->ISR & RTC_ISR_RSF) == 0U);
+    } else {
+        RTC->CR &= ~(RTC_CR_BYPSHAD);
+
+        RTC->ISR &= (uint32_t)RTC_ISR_RSF_Msk;
+
+        // Wait for register to be synchronized
+        while ((RTC->ISR & RTC_ISR_RSF) == 0U);
+
+        RTC->CR |= RTC_CR_BYPSHAD;
+    }
+
+    RTC->OR &= ~(RTC_OR_ALARMOUTTYPE | RTC_OR_OUT_RMP);
+
+    // Set output type to push-pull, output remap to config 0
+    RTC->OR |= (RTC_OR_ALARMOUTTYPE);
+
+    // Enable RTC write protection
+    RTC->WPR = 0xFFU;
+
     LOG_INFO("Hardware initialization successful %d", 69420);
 
 	// Basic kalman filter for constant accelerating body
@@ -279,6 +411,12 @@ int main(void)
 
     while(1)
     {
+        readRTCTimeBuffer(&timeBuffer);
+
+        LOG_INFO("Time: %02d.%02d.%02d", timeBuffer.hours, 
+                                         timeBuffer.minutes, 
+                                         timeBuffer.seconds);
+
         if (Is_UART8_Buffer_Full())
         {
             for (int i = 0; i < SIZE(uart8_rx_data); i++)
@@ -379,3 +517,29 @@ uint8_t Is_UART7_Buffer_Full(void)
     }
 }
 
+uint8_t convertBCDToBinary(const uint8_t value) {
+    uint8_t tmp;
+    tmp = ((value & 0xF0U) >> 4U) * 10U;
+    return (tmp + (value & 0x0FU));
+}
+
+void readRTCTimeBuffer(RTCTimeBuffer *buffer) {
+    uint32_t tmpreg;
+
+    if (buffer != NULL) {
+        buffer->subSeconds = (uint32_t)(RTC->SSR);
+        buffer->secondFraction = (uint32_t)(RTC->PRER & RTC_PRER_PREDIV_S);
+
+        tmpreg = (uint32_t)(RTC->TR & RTC_TR_RESERVED_MASK);
+
+        /* Fill the structure fields with the read parameters */
+        buffer->hours      = (uint8_t)((tmpreg & (RTC_TR_HT  | RTC_TR_HU))  >> RTC_TR_HU_Pos);
+        buffer->minutes    = (uint8_t)((tmpreg & (RTC_TR_MNT | RTC_TR_MNU)) >> RTC_TR_MNU_Pos);
+        buffer->seconds    = (uint8_t)((tmpreg & (RTC_TR_ST  | RTC_TR_SU))  >> RTC_TR_SU_Pos);
+
+         /* Convert the time structure parameters to Binary format */
+        buffer->hours   = (uint8_t)convertBCDToBinary(buffer->hours);
+        buffer->minutes = (uint8_t)convertBCDToBinary(buffer->minutes);
+        buffer->seconds = (uint8_t)convertBCDToBinary(buffer->seconds);
+    }
+}
