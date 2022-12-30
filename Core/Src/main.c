@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
@@ -11,6 +10,7 @@
 #include "ringbuffer.h"
 #include "gps.h"
 #include "hguide_imu.h"
+#include "printf.h"
 
 #define AF07                (0x7UL)
 #define AF08                (0x8UL)
@@ -24,15 +24,10 @@
 
 #define SIZE(array)         (sizeof(array) / sizeof(array[0]))
 
-void USART3_DMA1_Stream3_Write(volatile uint8_t *data, uint16_t length);
-void USART3_DMA1_Stream1_Read(volatile uint8_t *buffer, uint16_t length);
-void UART8_DMA1_Stream4_Write(volatile uint8_t *data, uint16_t length);
-void UART8_DMA1_Stream0_Read(volatile uint8_t *buffer, uint16_t length);
-void UART7_DMA1_Stream2_Read(volatile uint8_t *buffer, uint16_t length);
-
-uint8_t Is_USART3_Buffer_Full(void);
-uint8_t Is_UART8_Buffer_Full(void);
-uint8_t Is_UART7_Buffer_Full(void);
+__attribute__ ((section(".buffer"), used)) volatile uint8_t uart8_rx_data[GPS_BUF_SIZE];
+__attribute__ ((section(".buffer"), used)) volatile uint8_t uart8_tx_data[GPS_BUF_SIZE];
+__attribute__ ((section(".buffer"), used)) volatile uint8_t uart7_rx_data[HGUIDE_BUF_SIZE];
+__attribute__ ((section(".buffer"), used)) volatile uint8_t uart7_tx_data[HGUIDE_BUF_SIZE];
 
 volatile uint8_t usart3_tx_finished = 0;
 volatile uint8_t usart3_rx_finished = 0;
@@ -40,13 +35,6 @@ volatile uint8_t uart8_tx_finished = 0;
 volatile uint8_t uart8_rx_finished = 0;
 volatile uint8_t uart7_tx_finished = 0;
 volatile uint8_t uart7_rx_finished = 0;
-
-
-__attribute__ ((section(".buffer"), used)) volatile uint8_t uart8_rx_data[GPS_BUF_SIZE];
-__attribute__ ((section(".buffer"), used)) volatile uint8_t uart8_tx_data[GPS_BUF_SIZE];
-__attribute__ ((section(".buffer"), used)) volatile uint8_t uart7_rx_data[HGUIDE_BUF_SIZE];
-__attribute__ ((section(".buffer"), used)) volatile uint8_t uart7_tx_data[HGUIDE_BUF_SIZE];
-
 
 int main(void)
 {

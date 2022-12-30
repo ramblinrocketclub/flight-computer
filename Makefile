@@ -42,6 +42,7 @@ Core/Src/ringbuffer.c \
 Core/Src/ringbuffer_new.c \
 Core/Src/gps.c \
 Core/Src/hguide_imu.c \
+Core/Src/printf.c \
 Core/Src/stm32h7xx_it.c
 
 #C_SOURCES =  \
