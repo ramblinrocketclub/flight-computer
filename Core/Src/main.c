@@ -243,7 +243,13 @@ int main(void)
 
             sprintf((char *) uart7_tx_data, "%lf", GetLinearAccelerationX(pHGuidei300Imu));
             USART3_DMA1_Stream3_Write((uint8_t *) uart7_tx_data, strlen((char *) uart7_tx_data));
-            USART3_DMA1_Stream3_Write((uint8_t *) "\n", strlen((char *) "\n"));
+            USART3_DMA1_Stream3_Write((uint8_t *) ",", strlen((char *) ","));
+            sprintf((char *) uart7_tx_data, "%lf", GetLinearAccelerationY(pHGuidei300Imu));
+            USART3_DMA1_Stream3_Write((uint8_t *) uart7_tx_data, strlen((char *) uart7_tx_data));
+            USART3_DMA1_Stream3_Write((uint8_t *) ",", strlen((char *) ","));
+            sprintf((char *) uart7_tx_data, "%lf", GetLinearAccelerationZ(pHGuidei300Imu));
+            USART3_DMA1_Stream3_Write((uint8_t *) uart7_tx_data, strlen((char *) uart7_tx_data));
+            USART3_DMA1_Stream3_Write((uint8_t *) "\r\n", strlen((char *) "\r\n"));
         }
 	}
 }
