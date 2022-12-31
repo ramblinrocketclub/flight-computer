@@ -158,8 +158,14 @@ arm_status correct_kalman_filter(KalmanFilter *kf, uint16_t numMeasuredStates, f
     arm_mat_init_f32(&KH, kf->numStates, kf->numStates, KH_f32);
 
     // Construct identity matrix
-    for (uint16_t i = 0; i < kf->numStates; i++) {
-        I_f32[i + i * kf->numStates] = 1;
+    for (uint16_t y = 0; y < kf->numStates; y++) {
+        for (uint16_t x = 0; x < kf->numStates; x++) {
+            if (x == y) {
+                I_f32[x + y * kf->numStates] = 1;
+            } else {
+                I_f32[x + y * kf->numStates] = 0;
+            }
+        }
     }
 
     arm_mat_init_f32(&I, kf->numStates, kf->numStates, I_f32);
