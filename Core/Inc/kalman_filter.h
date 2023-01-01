@@ -30,4 +30,6 @@ arm_status predict_kalman_filter(KalmanFilter *kf, float32_t *un_f32);
 arm_status correct_kalman_filter(KalmanFilter *kf, uint16_t numMeasuredStates, float32_t *zn_f32, 
                         float32_t *H_f32, float32_t *measurementStdDevs);
 
+void print_matrix(arm_matrix_instance_f32 *A, const char *name);
+
 #endif /* KALMAN_FILTER_H */

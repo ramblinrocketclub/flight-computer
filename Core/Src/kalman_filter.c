@@ -1,5 +1,7 @@
 #include "kalman_filter.h"
 
+#include "log.h"
+
 arm_status init_kalman_filter(KalmanFilter *kf, uint16_t numStates, uint16_t numInputs, 
                         float32_t *F_f32, float32_t *G_f32, float32_t *initialP, 
                         float32_t *Q_f32, float32_t *initialXHat, float32_t *stateStdDevs) {
@@ -222,4 +224,37 @@ arm_status correct_kalman_filter(KalmanFilter *kf, uint16_t numMeasuredStates, f
     result |= arm_mat_add_f32(&IKHPIKHT, &KRKT, &kf->P);
 
     return result;
+}
+
+void print_matrix(arm_matrix_instance_f32 *A, const char *name) {
+	int row;
+	int col;
+
+	LOG_INFO("%s Matrix:", name);
+
+	_LOG_INFO("[");
+
+	for (row = 0; row < A->numRows; row++) {
+		if (row > 0) {
+			_LOG_INFO(" ");
+		}
+
+		_LOG_INFO("[");
+
+		for (col = 0; col < A->numCols; col++) {
+			if (col < A->numCols - 1) {
+				_LOG_INFO("% 15.5f, ", A->pData[row * A->numCols + col]);
+			} else {
+				_LOG_INFO("% 15.5f", A->pData[row * A->numCols + col]);
+			}
+		}
+
+		if (row < A->numRows - 1) {
+			LOG_INFO("],");
+		} else {
+			_LOG_INFO("]");
+		}
+	}
+
+	LOG_INFO("]");
 }
