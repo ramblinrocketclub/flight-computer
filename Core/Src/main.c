@@ -11,6 +11,8 @@
 #include "gps.h"
 #include "hguide_imu.h"
 #include "printf.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 #define AF07                (0x7UL)
 #define AF08                (0x8UL)
@@ -239,7 +241,7 @@ int main(void)
             USART3_DMA1_Stream3_Write((uint8_t *) uart7_tx_data, strlen((char *) uart7_tx_data));
             USART3_DMA1_Stream3_Write((uint8_t *) "\r\n", strlen((char *) "\r\n"));
         }
-	}
+    }
 }
 
 void USART3_DMA1_Stream3_Write(volatile uint8_t *data, uint16_t length)
