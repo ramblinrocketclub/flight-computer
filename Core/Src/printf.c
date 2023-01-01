@@ -3,7 +3,6 @@
 
 #include "printf.h"
 
-
 // define this globally (e.g. gcc -DPRINTF_INCLUDE_CONFIG_H ...) to include the
 // printf_config.h header file
 // default: undefined
@@ -84,7 +83,6 @@
 #if defined(PRINTF_SUPPORT_FLOAT)
 #include <float.h>
 #endif
-
 
 // output function type
 typedef void (*out_fct_type)(char character, void* buffer, size_t idx, size_t maxlen);

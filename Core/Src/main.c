@@ -2,7 +2,6 @@
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <math.h>
 #include "main.h"
 #include "stm32h7xx.h"
@@ -23,6 +22,7 @@
 
 #define GPS_BUF_SIZE        512
 #define HGUIDE_BUF_SIZE     512
+#define LOG_BUF_SIZE        512
 
 #define SIZE(array)         (sizeof(array) / sizeof(array[0]))
 
@@ -30,6 +30,8 @@ __attribute__ ((section(".buffer"), used)) volatile uint8_t uart8_rx_data[GPS_BU
 __attribute__ ((section(".buffer"), used)) volatile uint8_t uart8_tx_data[GPS_BUF_SIZE];
 __attribute__ ((section(".buffer"), used)) volatile uint8_t uart7_rx_data[HGUIDE_BUF_SIZE];
 __attribute__ ((section(".buffer"), used)) volatile uint8_t uart7_tx_data[HGUIDE_BUF_SIZE];
+__attribute__ ((section(".buffer"), used)) volatile uint8_t usart3_rx_data[LOG_BUF_SIZE];
+__attribute__ ((section(".buffer"), used)) volatile uint8_t usart3_tx_data[LOG_BUF_SIZE];
 
 volatile uint8_t usart3_tx_finished = 0;
 volatile uint8_t usart3_rx_finished = 0;
@@ -155,7 +157,7 @@ int main(void)
     HGuidei300Imu_t *pHGuidei300Imu = &hguide_i300_imu;
 
     uint8_t empty1[2048] = {[0 ... 2047] = 0};
-    uint8_t empty2[4096] = {[0 ... 4095] = 0};
+    uint8_t empty2[2048] = {[0 ... 2047] = 0};
 
     ringbuf_t buffer;
     ringbuf_t *buf = &buffer;
@@ -164,7 +166,7 @@ int main(void)
     RingBuffer_t *pHGuidei300ImuData = &imu_data;
 
     ringbuf_init(buf, empty1, SIZE(empty1));
-    RingBuffer_Init(pHGuidei300ImuData, empty1, SIZE(empty1));
+    RingBuffer_Init(pHGuidei300ImuData, empty2, SIZE(empty2));
 
     NVIC_EnableIRQ(DMA1_Stream0_IRQn);
     NVIC_EnableIRQ(DMA1_Stream3_IRQn);
@@ -188,42 +190,12 @@ int main(void)
 
             if (gps->gll.pos_mode != 'A')
             {
-                sprintf((char *) uart8_tx_data, "%c", gps->gll.pos_mode);
-                USART3_DMA1_Stream3_Write((uint8_t *) "Fix mode: ", strlen((char *) "Fix mode: "));
-                USART3_DMA1_Stream3_Write((uint8_t *) uart8_tx_data, strlen((char *) uart8_tx_data));
-                USART3_DMA1_Stream3_Write((uint8_t *) "\n", strlen((char *) "\n"));
+                printf("Fix mode: %c\n", gps->gll.pos_mode);
                 continue;
             }
 
-            sprintf((char *) uart8_tx_data, "%lf", gps->gll.lat);
-            USART3_DMA1_Stream3_Write((uint8_t *) "Latitude: ", strlen((char *) "Latitude: "));
-            USART3_DMA1_Stream3_Write((uint8_t *) uart8_tx_data, strlen((char *) uart8_tx_data));
-
-            USART3_DMA1_Stream3_Write((uint8_t *) " ", strlen((char *) " "));
-
-            sprintf((char *) uart8_tx_data, "%c", gps->gll.ns);
-            USART3_DMA1_Stream3_Write((uint8_t *) "N/S: ", strlen((char *) "N/S: "));
-            USART3_DMA1_Stream3_Write((uint8_t *) uart8_tx_data, strlen((char *) uart8_tx_data));
-
-            USART3_DMA1_Stream3_Write((uint8_t *) " ", strlen((char *) " "));
-
-            sprintf((char *) uart8_tx_data, "%lf", gps->gll.lon);
-            USART3_DMA1_Stream3_Write((uint8_t *) "Longitude: ", strlen((char *) "Longitude: "));
-            USART3_DMA1_Stream3_Write((uint8_t *) uart8_tx_data, strlen((char *) uart8_tx_data));
-
-            USART3_DMA1_Stream3_Write((uint8_t *) " ", strlen((char *) " "));
-
-            sprintf((char *) uart8_tx_data, "%c", gps->gll.ew);
-            USART3_DMA1_Stream3_Write((uint8_t *) "E/W: ", strlen((char *) "E/W: "));
-            USART3_DMA1_Stream3_Write((uint8_t *) uart8_tx_data, strlen((char *) uart8_tx_data));
-
-            USART3_DMA1_Stream3_Write((uint8_t *) " ", strlen((char *) " "));
-
-            sprintf((char *) uart8_tx_data, "%ld", gps->gll.checksum);
-            USART3_DMA1_Stream3_Write((uint8_t *) "Checksum: ", strlen((char *) "Checksum: "));
-            USART3_DMA1_Stream3_Write((uint8_t *) uart8_tx_data, strlen((char *) uart8_tx_data));
-
-            USART3_DMA1_Stream3_Write((uint8_t *) "\n", strlen((char *) "\n"));
+            printf("Latitude: %lf N/S: %c Longitude: %lf E/W: %c Checksum: %ld\n",
+                    gps->gll.lat, gps->gll.ns, gps->gll.lon, gps->gll.ew, gps->gll.checksum);
         }
 
         if (Is_UART7_Buffer_Full())
@@ -231,15 +203,7 @@ int main(void)
             RingBuffer_Put(pHGuidei300ImuData, (uint8_t *) uart7_rx_data, SIZE(uart7_rx_data));
             ProcessHGuidei300(pHGuidei300Imu, pHGuidei300ImuData);
 
-            sprintf((char *) uart7_tx_data, "%lf", GetLinearAccelerationX(pHGuidei300Imu));
-            USART3_DMA1_Stream3_Write((uint8_t *) uart7_tx_data, strlen((char *) uart7_tx_data));
-            USART3_DMA1_Stream3_Write((uint8_t *) ",", strlen((char *) ","));
-            sprintf((char *) uart7_tx_data, "%lf", GetLinearAccelerationY(pHGuidei300Imu));
-            USART3_DMA1_Stream3_Write((uint8_t *) uart7_tx_data, strlen((char *) uart7_tx_data));
-            USART3_DMA1_Stream3_Write((uint8_t *) ",", strlen((char *) ","));
-            sprintf((char *) uart7_tx_data, "%lf", GetLinearAccelerationZ(pHGuidei300Imu));
-            USART3_DMA1_Stream3_Write((uint8_t *) uart7_tx_data, strlen((char *) uart7_tx_data));
-            USART3_DMA1_Stream3_Write((uint8_t *) "\r\n", strlen((char *) "\r\n"));
+            printf("%lf,%lf,%lf\n", GetLinearAccelerationX(pHGuidei300Imu), GetLinearAccelerationY(pHGuidei300Imu), GetLinearAccelerationZ(pHGuidei300Imu));
         }
     }
 }
@@ -323,5 +287,12 @@ uint8_t Is_UART7_Buffer_Full(void)
         uart7_rx_finished = 0;
         return BUFFER_FULL;
     }
+}
+
+void _putchar(char character)
+{
+    usart3_tx_data[0] = (uint8_t) character;
+    usart3_tx_data[1] = '\0';
+    USART3_DMA1_Stream3_Write((uint8_t *) usart3_tx_data, 1);
 }
 
