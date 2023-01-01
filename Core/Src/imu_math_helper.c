@@ -57,8 +57,20 @@ Quaternion mult_quaternions(const Quaternion *a, const Quaternion *b) {
     return normalize_quaternion(&result);
 }
 
-Quaternion update_local_orientation(Quaternion *initialPose, float32_t gXRPS, float32_t gYRPS, float32_t gZRPS, 
-                                float32_t dtSec) {
+void quaternion_to_matrix(const Quaternion *quat, arm_matrix_instance_f32 *dst3x3) {
+    dst3x3->pData[0] = 1.0f - (2.0f * quat->y * quat->y) - (2.0f * quat->z * quat->z);
+    dst3x3->pData[1] = (2.0f * quat->x * quat->y) - (2.0f * quat->w * quat->z); 
+    dst3x3->pData[2] = (2.0f * quat->x * quat->z) + (2.0f * quat->w * quat->y);
+    dst3x3->pData[3] = (2.0f * quat->x * quat->y) + (2.0f * quat->w * quat->z);
+    dst3x3->pData[4] = 1.0f - (2.0f * quat->x * quat->x) - (2.0f * quat->z * quat->z);
+    dst3x3->pData[5] = (2.0f * quat->y * quat->z) - (2.0f * quat->w * quat->x);
+    dst3x3->pData[6] = (2.0f * quat->x * quat->z) - (2.0f * quat->w * quat->y);
+    dst3x3->pData[7] = (2.0f * quat->y * quat->z) + (2.0f * quat->w * quat->x);
+    dst3x3->pData[8] = 1.0f - (2.0f * quat->x * quat->x) - (2.0f * quat->y * quat->y);
+}
+
+Quaternion update_local_orientation(Quaternion *initialPose, double gXRPS, double gYRPS, double gZRPS, 
+                                double dtSec) {
     Quaternion deltaQuat;
 
     init_quaternion_xyzw(&deltaQuat, 1, 0.5 * gXRPS * dtSec, 0.5 * gYRPS * dtSec, 0.5 * gZRPS * dtSec);
