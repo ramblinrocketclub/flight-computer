@@ -69,6 +69,30 @@ void quaternion_to_matrix(const Quaternion *quat, arm_matrix_instance_f32 *dst3x
     dst3x3->pData[8] = 1.0f - (2.0f * quat->x * quat->x) - (2.0f * quat->y * quat->y);
 }
 
+void calibrate_imu(float32_t Axyz[], arm_matrix_instance_f32 *dst3x3) {
+    float32_t len;
+
+    arm_sqrt_f32(Axyz[0] * Axyz[0] + Axyz[1] * Axyz[1] + Axyz[2] * Axyz[2], &len);
+
+    float32_t Nxyz[3] = {
+        Axyz[0] / len, Axyz[1] / len, Axyz[2] / len
+    };
+
+    float32_t Ax = Nxyz[0];
+    float32_t Ay = Nxyz[1];
+    float32_t Az = Nxyz[2];
+
+    dst3x3->pData[0] = (Ay * Ay - Ax * Ax * Az) / (Ax * Ax + Ay * Ay);
+    dst3x3->pData[1] = (-Ax * Ay - Ax * Ay * Az) / (Ax * Ax + Ay * Ay);
+    dst3x3->pData[2] = Ax;
+    dst3x3->pData[3] = (-Ax * Ay - Ax * Ay * Az) / (Ax * Ax + Ay * Ay);
+    dst3x3->pData[4] = (Ax * Ax - Ay * Ay * Az) / (Ax * Ax + Ay * Ay);
+    dst3x3->pData[5] = Ay;
+    dst3x3->pData[6] = -Ax;
+    dst3x3->pData[7] = -Ay;
+    dst3x3->pData[8] = -Az;
+}
+
 Quaternion update_local_orientation(Quaternion *initialPose, double gXRPS, double gYRPS, double gZRPS, 
                                 double dtSec) {
     Quaternion deltaQuat;
@@ -76,4 +100,21 @@ Quaternion update_local_orientation(Quaternion *initialPose, double gXRPS, doubl
     init_quaternion_xyzw(&deltaQuat, 1, 0.5 * gXRPS * dtSec, 0.5 * gYRPS * dtSec, 0.5 * gZRPS * dtSec);
 
     return mult_quaternions(initialPose, &deltaQuat);
+}
+
+arm_status get_world_rotation_matrix(arm_matrix_instance_f32 *locToWorld3x3, Quaternion *locOrientation, 
+                                arm_matrix_instance_f32 *dst3x3) {
+    arm_status result = ARM_MATH_SUCCESS;
+
+    float32_t localMatrix_f32[9] = {0};
+
+    arm_matrix_instance_f32 localMatrix;
+
+    arm_mat_init_f32(&localMatrix, 3, 3, localMatrix_f32);
+
+    quaternion_to_matrix(locOrientation, &localMatrix);
+
+    result |= arm_mat_mult_f32(locToWorld3x3, &localMatrix, dst3x3);
+
+    return result;
 }
