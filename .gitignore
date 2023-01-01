@@ -4,9 +4,10 @@
 !/Analysis/
 !/Core/
 !/Docs/
-!Doxyfile
 !/Drivers/
+!/Middlewares/
 !Makefile
+!Doxyfile
 !STM32H723ZGTx_FLASH.ld
 !startup_stm32h723xx.s
 !README.md
