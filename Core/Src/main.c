@@ -15,6 +15,7 @@
 
 #include "kalman_filter.h"
 #include "rtc.h"
+#include "state_machine.h"
 
 #define AF07                (0x7UL)
 #define AF08                (0x8UL)
@@ -55,6 +56,23 @@ uint8_t Is_UART8_Buffer_Full(void);
 uint8_t Is_UART7_Buffer_Full(void);
 void readRTCTimeBuffer(RTCTimeBuffer *buffer);
 void _putchar(char character);
+
+// State machine states
+State safe;
+State armed;
+State boost1;
+State fast1;
+State preStage;
+State failedStaging;
+State postStage;
+State sustainerIgnition;
+State failedSustainerIgnition;
+State boost2;
+State fast2;
+State apogee;
+State coast;
+State chute;
+State landed;
 
 int main(void)
 {
