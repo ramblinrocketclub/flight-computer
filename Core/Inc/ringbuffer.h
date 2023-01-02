@@ -9,7 +9,7 @@
 #define RINGBUFFER_H
 
 typedef struct ringbuf {
-    uint8_t *buf;
+    volatile uint8_t *buf;
     uint32_t size;
     uint32_t end;
     uint32_t start;

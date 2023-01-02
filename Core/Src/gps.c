@@ -1,8 +1,8 @@
 #include <stdint.h>
-#include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include "printf.h"
 #include "gps.h"
 
 void parse_nmea_packet(GPS_Handle *gps, ringbuf_t *ringbuf, int num_messages, ...)
