@@ -4,11 +4,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define STATE_NAME_MAX_LEN 25
-
 typedef struct State {
     // The name of the state (for debugging purposes)
-    char name[STATE_NAME_MAX_LEN];
+    char *name;
 
     // The init function pointer is invoked when the state is entered
     void (*initPtr)();
