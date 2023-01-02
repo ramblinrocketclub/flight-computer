@@ -13,7 +13,6 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-#include "log.h"
 #include "kalman_filter.h"
 #include "rtc.h"
 
@@ -275,7 +274,7 @@ int main(void)
     // Enable RTC write protection
     RTC->WPR = 0xFFU;
 
-    LOG_INFO("Hardware initialization successful %d", 69420);
+    printf("Hardware initialization successful %d\n", 69420);
 
 	// Basic kalman filter for constant accelerating body
 	KalmanFilter kf;
@@ -317,7 +316,7 @@ int main(void)
 	status = init_kalman_filter(&kf, 2, 1, &F_f32[0], &G_f32[0], &P_f32[0], &Q_f32[0], &xHat_f32[0], &stateStdDevs_f32[0]);
 
 	print_matrix(&kf.Q, "Q");
-	LOG_INFO("Kalman initialization status: %d", status);
+	printf("Kalman initialization status: %d\n", status);
 
 	float32_t un_f32[1] = { 9.8 };
 
@@ -325,7 +324,7 @@ int main(void)
 
 	print_matrix(&kf.xHat, "xHat");
 	print_matrix(&kf.P, "P");
-	LOG_INFO("Step 1 predict status: %d", status);
+	printf("Step 1 predict status: %d\n", status);
 
 	float32_t zn_f32[1] = { -32.40 };
 	float32_t H_f32[2] = { 1, 0 };
@@ -335,7 +334,7 @@ int main(void)
 
 	print_matrix(&kf.xHat, "xHat");
 	print_matrix(&kf.P, "P");
-	LOG_INFO("Step 1 correct status: %d", status);
+	printf("Step 1 correct status: %d\n", status);
 
 	un_f32[0] = 39.72 - 9.8;
 
@@ -343,7 +342,7 @@ int main(void)
 
 	print_matrix(&kf.xHat, "xHat");
 	print_matrix(&kf.P, "P");
-	LOG_INFO("Step 2 predict status: %d", status);
+	printf("Step 2 predict status: %d\n", status);
 
 	zn_f32[0] = -11.1;
 
@@ -351,13 +350,13 @@ int main(void)
 
 	print_matrix(&kf.xHat, "xHat");
 	print_matrix(&kf.P, "P");
-	LOG_INFO("Step 2 correct status: %d", status);
+	printf("Step 2 correct status: %d\n", status);
 
     while(1)
     {
         readRTCTimeBuffer(&timeBuffer);
 
-        LOG_INFO("Time: %02d.%02d.%02d", timeBuffer.hours, 
+        printf("Time: %02d.%02d.%02d\n", timeBuffer.hours, 
                                          timeBuffer.minutes, 
                                          timeBuffer.seconds);
 

@@ -1,13 +1,13 @@
 #include "state_machine.h"
 
 #include <stddef.h>
-#include "log.h"
+#include "printf.h"
 
 void init_state_machine(StateMachine *sm, State *initialState) {
     sm->currentState = initialState;
 
     if (sm->currentState == NULL) {
-        LOG_FATAL("Initial state for state machine must not be null!");
+        printf("Initial state for state machine must not be null!\n");
     }
 
     sm->hasFirstStateInitialized = false;
@@ -29,6 +29,6 @@ void step_state_machine(StateMachine *sm) {
             (*sm->currentState->initPtr)();
         }
     } else {
-        LOG_WARN("State machine has effectively terminated due to a null state");
+        printf("State machine has effectively terminated due to a null state\n");
     }
 }
