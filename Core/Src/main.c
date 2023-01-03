@@ -46,17 +46,6 @@ volatile uint8_t uart8_rx_finished = 0;
 volatile uint8_t uart7_tx_finished = 0;
 volatile uint8_t uart7_rx_finished = 0;
 
-void USART3_DMA1_Stream3_Write(volatile uint8_t *data, uint16_t length);
-void USART3_DMA1_Stream1_Read(volatile uint8_t *buffer, uint16_t length);
-void UART8_DMA1_Stream4_Write(volatile uint8_t *data, uint16_t length);
-void UART8_DMA1_Stream0_Read(volatile uint8_t *buffer, uint16_t length);
-void UART7_DMA1_Stream2_Read(volatile uint8_t *buffer, uint16_t length);
-uint8_t Is_USART3_Buffer_Full(void);
-uint8_t Is_UART8_Buffer_Full(void);
-uint8_t Is_UART7_Buffer_Full(void);
-void readRTCTimeBuffer(RTCTimeBuffer *buffer);
-void _putchar(char character);
-
 // State machine states
 State safe;
 State armed;
@@ -73,6 +62,62 @@ State apogee;
 State coast;
 State chute;
 State landed;
+
+StateMachine stateMachine;
+
+void USART3_DMA1_Stream3_Write(volatile uint8_t *data, uint16_t length);
+void USART3_DMA1_Stream1_Read(volatile uint8_t *buffer, uint16_t length);
+void UART8_DMA1_Stream4_Write(volatile uint8_t *data, uint16_t length);
+void UART8_DMA1_Stream0_Read(volatile uint8_t *buffer, uint16_t length);
+void UART7_DMA1_Stream2_Read(volatile uint8_t *buffer, uint16_t length);
+uint8_t Is_USART3_Buffer_Full(void);
+uint8_t Is_UART8_Buffer_Full(void);
+uint8_t Is_UART7_Buffer_Full(void);
+void readRTCTimeBuffer(RTCTimeBuffer *buffer);
+void _putchar(char character);
+
+void safe_initialize();
+State *safe_execute();
+void safe_finish();
+void armed_initialize();
+State *armed_execute();
+void armed_finish();
+void boost1_initialize();
+State *boost1_execute();
+void boost1_finish();
+void fast_1_initialize();
+State *fast_1_execute();
+void fast_1_finish();
+void pre_stage_initialize();
+State *pre_stage_execute();
+void pre_stage_finish();
+void failed_stage_initialize();
+State *failed_stage_execute();
+void failed_stage_finish();
+void post_stage_initialize();
+State *post_stage_execute();
+void post_stage_finish();
+void sustainer_ignition_initialize();
+State *sustainer_ignition_execute();
+void sustainer_ignition_finish();
+void failed_sustainer_ignition_initialize();
+State *failed_sustainer_ignition_execute();
+void failed_sustainer_ignition_finish();
+void boost2_initialize();
+State *boost2_execute();
+void boost2_finish();
+void fast2_initialize();
+State *fast2_execute();
+void fast2_finish();
+void apogee_initialize();
+State *apogee_execute();
+void apogee_finish();
+void coast_initialize();
+State *coast_execute();
+void coast_finish();
+void landed_initialize();
+State *landed_execute();
+void landed_finish();
 
 int main(void)
 {
@@ -370,6 +415,8 @@ int main(void)
 	print_matrix(&kf.P, "P");
 	printf("Step 2 correct status: %d\n", status);
 
+    init_state_machine(&stateMachine, &safe);
+
     while(1)
     {
         readRTCTimeBuffer(&timeBuffer);
@@ -512,4 +559,187 @@ void _putchar(char character)
     usart3_tx_data[0] = (uint8_t) character;
     usart3_tx_data[1] = '\0';
     USART3_DMA1_Stream3_Write((uint8_t *) usart3_tx_data, 1);
+}
+
+// State machine events
+// Safe state
+void safe_initialize() {
+
+}
+
+State *safe_execute() {
+    return &safe;
+}
+
+void safe_finish() {
+
+}
+
+// Armed state
+void armed_initialize() {
+
+}
+
+State *armed_execute() {
+    return &safe;
+}
+
+void armed_finish() {
+    
+}
+
+// Boost1 state
+void boost1_initialize() {
+
+}
+
+State *boost1_execute() {
+    return &safe;
+}
+
+void boost1_finish() {
+    
+}
+
+// Fast1 state
+void fast_1_initialize() {
+
+}
+
+State *fast_1_execute() {
+    return &safe;
+}
+
+void fast_1_finish() {
+    
+}
+
+// Prestage state
+void pre_stage_initialize() {
+
+}
+
+State *pre_stage_execute() {
+    return &safe;
+}
+
+void pre_stage_finish() {
+    
+}
+
+// Failed staging state
+void failed_stage_initialize() {
+
+}
+
+State *failed_stage_execute() {
+    return &safe;
+}
+
+void failed_stage_finish() {
+    
+}
+
+// Post stage state
+void post_stage_initialize() {
+
+}
+
+State *post_stage_execute() {
+    return &safe;
+}
+
+void post_stage_finish() {
+    
+}
+
+// Sustainer ignition state
+void sustainer_ignition_initialize() {
+
+}
+
+State *sustainer_ignition_execute() {
+    return &safe;
+}
+
+void sustainer_ignition_finish() {
+    
+}
+
+// Failed sustainer ignition state
+void failed_sustainer_ignition_initialize() {
+
+}
+
+State *failed_sustainer_ignition_execute() {
+    return &safe;
+}
+
+void failed_sustainer_ignition_finish() {
+    
+}
+
+// Boost2 state
+void boost2_initialize() {
+
+}
+
+State *boost2_execute() {
+    return &safe;
+}
+
+void boost2_finish() {
+    
+}
+
+// Fast2 state
+void fast2_initialize() {
+
+}
+
+State *fast2_execute() {
+    return &safe;
+}
+
+void fast2_finish() {
+    
+}
+
+// Apogee state
+void apogee_initialize() {
+
+}
+
+State *apogee_execute() {
+    return &safe;
+}
+
+void apogee_finish() {
+    
+}
+
+// Coast state
+void coast_initialize() {
+
+}
+
+State *coast_execute() {
+    return &safe;
+}
+
+void coast_finish() {
+    
+}
+
+// Landed state
+void landed_initialize() {
+
+}
+
+State *landed_execute() {
+    return &safe;
+}
+
+void landed_finish() {
+    
 }
