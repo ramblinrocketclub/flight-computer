@@ -85,9 +85,9 @@ void armed_finish();
 void boost1_initialize();
 State *boost1_execute();
 void boost1_finish();
-void fast_1_initialize();
-State *fast_1_execute();
-void fast_1_finish();
+void fast1_initialize();
+State *fast1_execute();
+void fast1_finish();
 void pre_stage_initialize();
 State *pre_stage_execute();
 void pre_stage_finish();
@@ -115,6 +115,9 @@ void apogee_finish();
 void coast_initialize();
 State *coast_execute();
 void coast_finish();
+void chute_initialize();
+State *chute_execute();
+void chute_finish();
 void landed_initialize();
 State *landed_execute();
 void landed_finish();
@@ -415,6 +418,66 @@ int main(void)
 	print_matrix(&kf.P, "P");
 	printf("Step 2 correct status: %d\n", status);
 
+    safe.initPtr = &safe_initialize;
+    safe.executePtr = &safe_execute;
+    safe.finishPtr = &safe_finish;
+
+    armed.initPtr = &armed_initialize;
+    armed.executePtr = &armed_execute;
+    armed.finishPtr = &armed_finish;
+
+    boost1.initPtr = &boost1_initialize;
+    boost1.executePtr = &boost1_execute;
+    boost1.finishPtr = &boost1_finish;
+
+    fast1.initPtr = &fast1_initialize;
+    fast1.executePtr = &fast1_execute;
+    fast1.finishPtr = &fast1_finish;
+
+    preStage.initPtr = &pre_stage_initialize;
+    preStage.executePtr = &pre_stage_execute;
+    preStage.finishPtr = &pre_stage_finish;
+
+    failedStaging.initPtr = &failed_stage_initialize;
+    failedStaging.executePtr = &failed_stage_execute;
+    failedStaging.finishPtr = &failed_stage_finish;
+
+    postStage.initPtr = &post_stage_initialize;
+    postStage.executePtr = &post_stage_execute;
+    postStage.finishPtr = &post_stage_finish;
+
+    sustainerIgnition.initPtr = &sustainer_ignition_initialize;
+    sustainerIgnition.executePtr = &sustainer_ignition_execute;
+    sustainerIgnition.finishPtr = &sustainer_ignition_finish;
+
+    failedSustainerIgnition.initPtr = &failed_sustainer_ignition_initialize;
+    failedSustainerIgnition.executePtr = &failed_sustainer_ignition_execute;
+    failedSustainerIgnition.finishPtr = &failed_sustainer_ignition_finish;
+
+    boost2.initPtr = &boost2_initialize;
+    boost2.executePtr = &boost2_execute;
+    boost2.finishPtr = &boost2_finish;
+
+    fast2.initPtr = &fast2_initialize;
+    fast2.executePtr = &fast2_execute;
+    fast2.finishPtr = &fast2_finish;
+
+    apogee.initPtr = &apogee_initialize;
+    apogee.executePtr = &apogee_execute;
+    apogee.finishPtr = &apogee_finish;
+
+    coast.initPtr = &coast_initialize;
+    coast.executePtr = &coast_execute;
+    coast.finishPtr = &coast_finish;
+
+    chute.initPtr = &chute_initialize;
+    chute.executePtr = &chute_execute;
+    chute.finishPtr = &chute_finish;
+
+    landed.initPtr = &landed_initialize;
+    landed.executePtr = &landed_execute;
+    landed.finishPtr = &landed_finish;
+
     init_state_machine(&stateMachine, &safe);
 
     while(1)
@@ -602,15 +665,15 @@ void boost1_finish() {
 }
 
 // Fast1 state
-void fast_1_initialize() {
+void fast1_initialize() {
 
 }
 
-State *fast_1_execute() {
+State *fast1_execute() {
     return &safe;
 }
 
-void fast_1_finish() {
+void fast1_finish() {
     
 }
 
@@ -729,6 +792,19 @@ State *coast_execute() {
 
 void coast_finish() {
     
+}
+
+// Chute state
+void chute_initialize() {
+
+}
+
+State *chute_execute() {
+    return &safe;
+}
+
+void chute_finish() {
+
 }
 
 // Landed state
