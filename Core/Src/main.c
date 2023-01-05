@@ -32,6 +32,14 @@
 
 #define SIZE(array)         (sizeof(array) / sizeof(array[0]))
 
+// Contains all of the information needed to make flight decisions
+typedef struct FlightStateVariables {
+    double verticalAcceleration;
+    double verticalVelocity;
+    double verticalPosition; // This position is wrt starting launch height
+    double tiltRadians;
+} FlightStateVariables;
+
 __attribute__ ((section(".buffer"), used)) volatile uint8_t uart8_rx_data[GPS_BUF_SIZE];
 __attribute__ ((section(".buffer"), used)) volatile uint8_t uart8_tx_data[GPS_BUF_SIZE];
 __attribute__ ((section(".buffer"), used)) volatile uint8_t uart7_rx_data[HGUIDE_BUF_SIZE];
@@ -65,6 +73,8 @@ State landed;
 
 StateMachine stateMachine;
 
+FlightStateVariables stateVariables;
+
 void USART3_DMA1_Stream3_Write(volatile uint8_t *data, uint16_t length);
 void USART3_DMA1_Stream1_Read(volatile uint8_t *buffer, uint16_t length);
 void UART8_DMA1_Stream4_Write(volatile uint8_t *data, uint16_t length);
@@ -75,6 +85,8 @@ uint8_t Is_UART8_Buffer_Full(void);
 uint8_t Is_UART7_Buffer_Full(void);
 void readRTCTimeBuffer(RTCTimeBuffer *buffer);
 void _putchar(char character);
+
+void update_flight_state_variables();
 
 void safe_initialize();
 State *safe_execute();
@@ -622,6 +634,12 @@ void _putchar(char character)
     usart3_tx_data[0] = (uint8_t) character;
     usart3_tx_data[1] = '\0';
     USART3_DMA1_Stream3_Write((uint8_t *) usart3_tx_data, 1);
+}
+
+// Updates the necessary variables to make flight decisions
+// from sensor measurements and dynamic models of the system
+void update_flight_state_variables() {
+
 }
 
 // State machine events
