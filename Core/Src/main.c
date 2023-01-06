@@ -10,6 +10,7 @@
 #include "gps.h"
 #include "hguide_imu.h"
 #include "printf.h"
+#include "rtc.h"
 #include "FreeRTOS.h"
 #include "task.h"
 
@@ -26,12 +27,12 @@
 
 #define SIZE(array)         (sizeof(array) / sizeof(array[0]))
 
-__attribute__ ((section(".buffer"), used)) volatile uint8_t uart8_rx_data[GPS_BUF_SIZE];
-__attribute__ ((section(".buffer"), used)) volatile uint8_t uart8_tx_data[GPS_BUF_SIZE];
-__attribute__ ((section(".buffer"), used)) volatile uint8_t uart7_rx_data[HGUIDE_BUF_SIZE];
-__attribute__ ((section(".buffer"), used)) volatile uint8_t uart7_tx_data[HGUIDE_BUF_SIZE];
-__attribute__ ((section(".buffer"), used)) volatile uint8_t usart3_rx_data[LOG_BUF_SIZE];
-__attribute__ ((section(".buffer"), used)) volatile uint8_t usart3_tx_data[LOG_BUF_SIZE];
+__attribute__ ((section(".buffer"))) volatile uint8_t uart8_rx_data[GPS_BUF_SIZE];
+__attribute__ ((section(".buffer"))) volatile uint8_t uart8_tx_data[GPS_BUF_SIZE];
+__attribute__ ((section(".buffer"))) volatile uint8_t uart7_rx_data[HGUIDE_BUF_SIZE];
+__attribute__ ((section(".buffer"))) volatile uint8_t uart7_tx_data[HGUIDE_BUF_SIZE];
+__attribute__ ((section(".buffer"))) volatile uint8_t usart3_rx_data[LOG_BUF_SIZE];
+__attribute__ ((section(".buffer"))) volatile uint8_t usart3_tx_data[LOG_BUF_SIZE];
 
 volatile uint8_t usart3_tx_finished = 0;
 volatile uint8_t usart3_rx_finished = 0;
