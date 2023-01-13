@@ -16,6 +16,9 @@
 #include "kalman_filter.h"
 #include "rtc.h"
 #include "state_machine.h"
+#include "imu_math_helper.h"
+
+#define GRAVITY_CONSTANT_MSEC2 9.81
 
 #define AF07                (0x7UL)
 #define AF08                (0x8UL)
@@ -54,6 +57,36 @@ volatile uint8_t uart8_rx_finished = 0;
 volatile uint8_t uart7_tx_finished = 0;
 volatile uint8_t uart7_rx_finished = 0;
 
+// Buffer for holding time data
+RTCTimeBuffer timeBuffer;
+
+HGuidei300Imu_t hguide_i300_imu;
+HGuidei300Imu_t *pHGuidei300Imu = &hguide_i300_imu;
+
+GPS_Handle gps_struct;
+GPS_Handle *gps = &gps_struct;
+
+uint8_t empty1[2048] = {[0 ... 2047] = 0};
+uint8_t empty2[2048] = {[0 ... 2047] = 0};
+
+ringbuf_t buffer;
+ringbuf_t *buf = &buffer;
+
+RingBuffer_t imu_data;
+RingBuffer_t *pHGuidei300ImuData = &imu_data;
+
+float32_t locToWorld3x3_f32[9] = {0};
+float32_t globalOrientation3x3_f32[9] = {0};
+float32_t Axyz_local_f32[3] = {0};
+float32_t Axyz_global_f32[3] = {0};
+
+arm_matrix_instance_f32 locToWorld3x3;
+Quaternion localOrientation;
+arm_matrix_instance_f32 globalOrientation3x3;
+
+arm_matrix_instance_f32 Axyz_local;
+arm_matrix_instance_f32 Axyz_global;
+
 // State machine states
 State safe;
 State armed;
@@ -75,17 +108,44 @@ StateMachine stateMachine;
 
 FlightStateVariables stateVariables;
 
-void USART3_DMA1_Stream3_Write(volatile uint8_t *data, uint16_t length);
-void USART3_DMA1_Stream1_Read(volatile uint8_t *buffer, uint16_t length);
-void UART8_DMA1_Stream4_Write(volatile uint8_t *data, uint16_t length);
-void UART8_DMA1_Stream0_Read(volatile uint8_t *buffer, uint16_t length);
-void UART7_DMA1_Stream2_Read(volatile uint8_t *buffer, uint16_t length);
-uint8_t Is_USART3_Buffer_Full(void);
-uint8_t Is_UART8_Buffer_Full(void);
-uint8_t Is_UART7_Buffer_Full(void);
-void readRTCTimeBuffer(RTCTimeBuffer *buffer);
-void _putchar(char character);
+KalmanFilter heightEstimator;
 
+// Define filtering constants and matrices
+const float accelStd = 0.1;
+const float accelVar = accelStd * accelStd;
+
+float32_t F_f32[4] = {
+    1, DT_SECONDS,
+    0, 1
+};
+
+float32_t G_f32[2] = {
+    0.5 * DT_SECONDS * DT_SECONDS,
+    DT_SECONDS
+};
+
+float32_t P_f32[4] = {
+        500, 0,
+        0, 500
+};
+
+float32_t Q_f32[4] = {
+        1.0, 1.0,
+        1.0, 1.0
+};
+
+float32_t xHat_f32[2] = {
+    // Position, velocity
+    0, 0
+};
+
+float32_t stateStdDevs_f32[2] = {
+    // Position std, velocity std
+    DT_SECONDS * DT_SECONDS / 2.0 * accelVar, DT_SECONDS * accelVar
+};
+
+void setup();
+void calibrate();
 void update_flight_state_variables();
 
 void safe_initialize();
@@ -134,8 +194,62 @@ void landed_initialize();
 State *landed_execute();
 void landed_finish();
 
+void USART3_DMA1_Stream3_Write(volatile uint8_t *data, uint16_t length);
+void USART3_DMA1_Stream1_Read(volatile uint8_t *buffer, uint16_t length);
+void UART8_DMA1_Stream4_Write(volatile uint8_t *data, uint16_t length);
+void UART8_DMA1_Stream0_Read(volatile uint8_t *buffer, uint16_t length);
+void UART7_DMA1_Stream2_Read(volatile uint8_t *buffer, uint16_t length);
+uint8_t Is_USART3_Buffer_Full(void);
+uint8_t Is_UART8_Buffer_Full(void);
+uint8_t Is_UART7_Buffer_Full(void);
+void readRTCTimeBuffer(RTCTimeBuffer *buffer);
+void _putchar(char character);
+
 int main(void)
 {
+    setup();
+
+    printf("Hardware initialization successful %d\n", 69420);
+
+    while(1)
+    {
+        readRTCTimeBuffer(&timeBuffer);
+
+        printf("Time: %02d.%02d.%02d\n", timeBuffer.hours, 
+                                         timeBuffer.minutes, 
+                                         timeBuffer.seconds);
+
+        if (Is_UART8_Buffer_Full())
+        {
+            for (int i = 0; i < SIZE(uart8_rx_data); i++)
+            {
+                ringbuf_put(buf, uart8_rx_data[i]);
+            }
+
+            parse_nmea_packet(gps, buf, 1, "GNGLL");
+
+            if (gps->gll.pos_mode != 'A')
+            {
+                printf("Fix mode: %c\n", gps->gll.pos_mode);
+                continue;
+            }
+
+            printf("Latitude: %lf N/S: %c Longitude: %lf E/W: %c Checksum: %ld\n",
+                    gps->gll.lat, gps->gll.ns, gps->gll.lon, gps->gll.ew, gps->gll.checksum);
+        }
+
+        if (Is_UART7_Buffer_Full())
+        {
+            RingBuffer_Put(pHGuidei300ImuData, (uint8_t *) uart7_rx_data, SIZE(uart7_rx_data));
+            ProcessHGuidei300(pHGuidei300Imu, pHGuidei300ImuData);
+
+            printf("%lf,%lf,%lf\n", GetLinearAccelerationX(pHGuidei300Imu), GetLinearAccelerationY(pHGuidei300Imu), GetLinearAccelerationZ(pHGuidei300Imu));
+        }
+    }
+}
+
+// Performs all hardware initialization
+void setup() {
     // RTC config constants
     // All config constants are in BCD format
     static const uint8_t hours = 0x10;
@@ -149,9 +263,6 @@ int main(void)
 
     // Temporary registers
     uint32_t tmpreg;
-
-    // Buffer for holding time data
-    RTCTimeBuffer timeBuffer;
 
     RCC->AHB4ENR |= RCC_AHB4ENR_GPIODEN;                                    // enable GPIOD clock
     RCC->AHB4ENR |= RCC_AHB4ENR_GPIOEEN;
@@ -261,21 +372,6 @@ int main(void)
     LL_DMA_SetPeriphRequest(DMA1, 4, 82U);
     LL_DMA_SetPeriphRequest(DMA1, 2, 79U);
 
-    GPS_Handle gps_struct;
-    GPS_Handle *gps = &gps_struct;
-
-    HGuidei300Imu_t hguide_i300_imu;
-    HGuidei300Imu_t *pHGuidei300Imu = &hguide_i300_imu;
-
-    uint8_t empty1[2048] = {[0 ... 2047] = 0};
-    uint8_t empty2[2048] = {[0 ... 2047] = 0};
-
-    ringbuf_t buffer;
-    ringbuf_t *buf = &buffer;
-
-    RingBuffer_t imu_data;
-    RingBuffer_t *pHGuidei300ImuData = &imu_data;
-
     ringbuf_init(buf, empty1, SIZE(empty1));
     RingBuffer_Init(pHGuidei300ImuData, empty2, SIZE(empty2));
 
@@ -352,84 +448,7 @@ int main(void)
     // Enable RTC write protection
     RTC->WPR = 0xFFU;
 
-    printf("Hardware initialization successful %d\n", 69420);
-
-	// Basic kalman filter for constant accelerating body
-	KalmanFilter kf;
-	arm_status status = ARM_MATH_SUCCESS;
-
-	const float accelStd = 0.1;
-	const float accelVar = accelStd * accelStd;
-
-	float32_t F_f32[4] = {
-		1, DT_SECONDS,
-		0, 1
-	};
-
-	float32_t G_f32[2] = {
-		0.5 * DT_SECONDS * DT_SECONDS,
-		DT_SECONDS
-	};
-
-	float32_t P_f32[4] = {
-			500, 0,
-			0, 500
-	};
-
-	float32_t Q_f32[4] = {
-			1.0, 1.0,
-			1.0, 1.0
-	};
-
-	float32_t xHat_f32[2] = {
-		// Position, velocity
-		0, 0
-	};
-
-	float32_t stateStdDevs_f32[2] = {
-		// Position std, velocity std
-		DT_SECONDS * DT_SECONDS / 2.0 * accelVar, DT_SECONDS * accelVar
-	};
-
-	status = init_kalman_filter(&kf, 2, 1, &F_f32[0], &G_f32[0], &P_f32[0], &Q_f32[0], &xHat_f32[0], &stateStdDevs_f32[0]);
-
-	print_matrix(&kf.Q, "Q");
-	printf("Kalman initialization status: %d\n", status);
-
-	float32_t un_f32[1] = { 9.8 };
-
-	status = predict_kalman_filter(&kf, un_f32);
-
-	print_matrix(&kf.xHat, "xHat");
-	print_matrix(&kf.P, "P");
-	printf("Step 1 predict status: %d\n", status);
-
-	float32_t zn_f32[1] = { -32.40 };
-	float32_t H_f32[2] = { 1, 0 };
-	float32_t measurementStdDevs[1] = { 20 };
-
-	status = correct_kalman_filter(&kf, 1, zn_f32, H_f32, measurementStdDevs);
-
-	print_matrix(&kf.xHat, "xHat");
-	print_matrix(&kf.P, "P");
-	printf("Step 1 correct status: %d\n", status);
-
-	un_f32[0] = 39.72 - 9.8;
-
-	status = predict_kalman_filter(&kf, un_f32);
-
-	print_matrix(&kf.xHat, "xHat");
-	print_matrix(&kf.P, "P");
-	printf("Step 2 predict status: %d\n", status);
-
-	zn_f32[0] = -11.1;
-
-	status = correct_kalman_filter(&kf, 1, zn_f32, H_f32, measurementStdDevs);
-
-	print_matrix(&kf.xHat, "xHat");
-	print_matrix(&kf.P, "P");
-	printf("Step 2 correct status: %d\n", status);
-
+    // Set up state machine
     safe.initPtr = &safe_initialize;
     safe.executePtr = &safe_execute;
     safe.finishPtr = &safe_finish;
@@ -492,154 +511,59 @@ int main(void)
 
     init_state_machine(&stateMachine, &safe);
 
-    while(1)
-    {
-        readRTCTimeBuffer(&timeBuffer);
+	arm_status status = ARM_MATH_SUCCESS;
 
-        printf("Time: %02d.%02d.%02d\n", timeBuffer.hours, 
-                                         timeBuffer.minutes, 
-                                         timeBuffer.seconds);
-
-        if (Is_UART8_Buffer_Full())
-        {
-            for (int i = 0; i < SIZE(uart8_rx_data); i++)
-            {
-                ringbuf_put(buf, uart8_rx_data[i]);
-            }
-
-            parse_nmea_packet(gps, buf, 1, "GNGLL");
-
-            if (gps->gll.pos_mode != 'A')
-            {
-                printf("Fix mode: %c\n", gps->gll.pos_mode);
-                continue;
-            }
-
-            printf("Latitude: %lf N/S: %c Longitude: %lf E/W: %c Checksum: %ld\n",
-                    gps->gll.lat, gps->gll.ns, gps->gll.lon, gps->gll.ew, gps->gll.checksum);
-        }
-
-        if (Is_UART7_Buffer_Full())
-        {
-            RingBuffer_Put(pHGuidei300ImuData, (uint8_t *) uart7_rx_data, SIZE(uart7_rx_data));
-            ProcessHGuidei300(pHGuidei300Imu, pHGuidei300ImuData);
-
-            printf("%lf,%lf,%lf\n", GetLinearAccelerationX(pHGuidei300Imu), GetLinearAccelerationY(pHGuidei300Imu), GetLinearAccelerationZ(pHGuidei300Imu));
-        }
-    }
+	status = init_kalman_filter(&heightEstimator, 2, 1, &F_f32[0], &G_f32[0], &P_f32[0], &Q_f32[0], &xHat_f32[0], &stateStdDevs_f32[0]);
 }
 
-void USART3_DMA1_Stream3_Write(volatile uint8_t *data, uint16_t length)
-{
-    DMA1_Stream3->M0AR = (uint32_t) data;
-    DMA1_Stream3->NDTR = length;
-    DMA1_Stream3->CR |= DMA_SxCR_EN;
-    while (usart3_tx_finished == 0);
-    usart3_tx_finished = 0;
-}
+// Calibrate sensors
+void calibrate() {
+    arm_mat_init_f32(&locToWorld3x3, 3, 3, locToWorld3x3_f32);
 
-void USART3_DMA1_Stream1_Read(volatile uint8_t *buffer, uint16_t length)
-{
-    DMA1_Stream1->M0AR = (uint32_t) buffer;
-    DMA1_Stream1->NDTR = length;
-    DMA1_Stream1->CR |= DMA_SxCR_EN;
-}
+    // TODO: Make sure IMU data is synchronized
+    float32_t Axyz[3] = {
+        GetLinearAccelerationX(pHGuidei300Imu),
+        GetLinearAccelerationY(pHGuidei300Imu),
+        GetLinearAccelerationZ(pHGuidei300Imu)
+    };
 
-void UART8_DMA1_Stream4_Write(volatile uint8_t *data, uint16_t length)
-{
-    DMA1_Stream4->M0AR = (uint32_t) data;
-    DMA1_Stream4->NDTR = length;
-    DMA1_Stream4->CR |= DMA_SxCR_EN;
-    while (uart8_tx_finished == 0);
-    uart8_tx_finished = 0;
-}
+    calibrate_imu(Axyz, &locToWorld3x3);
 
-void UART8_DMA1_Stream0_Read(volatile uint8_t *buffer, uint16_t length)
-{
-    DMA1_Stream0->M0AR = (uint32_t) buffer;
-    DMA1_Stream0->NDTR = length;
-    DMA1_Stream0->CR |= DMA_SxCR_EN;
-}
+    init_quaternion_xyzw(&localOrientation, 0, 0, 0, 1);
 
-void UART7_DMA1_Stream2_Read(volatile uint8_t *buffer, uint16_t length)
-{
-    DMA1_Stream2->M0AR = (uint32_t) buffer;
-    DMA1_Stream2->NDTR = length;
-    DMA1_Stream2->CR |= DMA_SxCR_EN;
-}
+    arm_mat_init_f32(&globalOrientation3x3, 3, 3, globalOrientation3x3_f32);
 
-
-uint8_t Is_USART3_Buffer_Full(void)
-{
-    if (usart3_rx_finished == 0)
-    {
-        return BUFFER_EMPTY;
-    }
-    else
-    {
-        usart3_rx_finished = 0;
-        return BUFFER_FULL;
-    }
-}
-
-uint8_t Is_UART8_Buffer_Full(void)
-{
-    if (uart8_rx_finished == 0)
-    {
-        return BUFFER_EMPTY;
-    }
-    else
-    {
-        uart8_rx_finished = 0;
-        return BUFFER_FULL;
-    }
-}
-
-uint8_t Is_UART7_Buffer_Full(void)
-{
-    if (uart7_rx_finished == 0)
-    {
-        return BUFFER_EMPTY;
-    }
-    else
-    {
-        uart7_rx_finished = 0;
-        return BUFFER_FULL;
-    }
-}
-
-void readRTCTimeBuffer(RTCTimeBuffer *buffer) {
-    uint32_t tmpreg;
-
-    if (buffer != NULL) {
-        buffer->subSeconds = (uint32_t)(RTC->SSR);
-        buffer->secondFraction = (uint32_t)(RTC->PRER & RTC_PRER_PREDIV_S);
-
-        tmpreg = (uint32_t)(RTC->TR & RTC_TR_RESERVED_MASK);
-
-        /* Fill the structure fields with the read parameters */
-        buffer->hours      = (uint8_t)((tmpreg & (RTC_TR_HT  | RTC_TR_HU))  >> RTC_TR_HU_Pos);
-        buffer->minutes    = (uint8_t)((tmpreg & (RTC_TR_MNT | RTC_TR_MNU)) >> RTC_TR_MNU_Pos);
-        buffer->seconds    = (uint8_t)((tmpreg & (RTC_TR_ST  | RTC_TR_SU))  >> RTC_TR_SU_Pos);
-
-         /* Convert the time structure parameters to Binary format */
-        buffer->hours   = (uint8_t)convertBCDToBinary(buffer->hours);
-        buffer->minutes = (uint8_t)convertBCDToBinary(buffer->minutes);
-        buffer->seconds = (uint8_t)convertBCDToBinary(buffer->seconds);
-    }
-}
-
-void _putchar(char character)
-{
-    usart3_tx_data[0] = (uint8_t) character;
-    usart3_tx_data[1] = '\0';
-    USART3_DMA1_Stream3_Write((uint8_t *) usart3_tx_data, 1);
+    arm_mat_init_f32(&Axyz_local, 3, 1, Axyz_local_f32);
+    arm_mat_init_f32(&Axyz_global, 3, 1, Axyz_global_f32);
 }
 
 // Updates the necessary variables to make flight decisions
 // from sensor measurements and dynamic models of the system
 void update_flight_state_variables() {
+    arm_status status = ARM_MATH_SUCCESS;
 
+    // TODO: Make sure IMU data is synchronized
+    double wx = GetAngularRateX(pHGuidei300Imu);
+    double wy = GetAngularRateY(pHGuidei300Imu);
+    double wz = GetAngularRateZ(pHGuidei300Imu);
+
+    // Update orientation
+    localOrientation = update_local_orientation(&localOrientation, wx, wy, wz, DT_SECONDS);
+
+    get_world_rotation_matrix(&locToWorld3x3, &localOrientation, &globalOrientation3x3);
+
+    // Transform linear accelerations
+    Axyz_local_f32[0] = GetLinearAccelerationX(pHGuidei300Imu);
+    Axyz_local_f32[1] = GetLinearAccelerationY(pHGuidei300Imu);
+    Axyz_local_f32[2] = GetLinearAccelerationZ(pHGuidei300Imu);
+
+    arm_mat_mult_f32(&globalOrientation3x3, &Axyz_local, &Axyz_global);
+
+    stateVariables.verticalAcceleration = Axyz_global_f32[2];
+
+    float32_t un_f32[1] = { stateVariables.verticalAcceleration - GRAVITY_CONSTANT_MSEC2 };
+
+    status = predict_kalman_filter(&heightEstimator, un_f32);
 }
 
 // State machine events
@@ -836,4 +760,111 @@ State *landed_execute() {
 
 void landed_finish() {
     
+}
+
+void USART3_DMA1_Stream3_Write(volatile uint8_t *data, uint16_t length)
+{
+    DMA1_Stream3->M0AR = (uint32_t) data;
+    DMA1_Stream3->NDTR = length;
+    DMA1_Stream3->CR |= DMA_SxCR_EN;
+    while (usart3_tx_finished == 0);
+    usart3_tx_finished = 0;
+}
+
+void USART3_DMA1_Stream1_Read(volatile uint8_t *buffer, uint16_t length)
+{
+    DMA1_Stream1->M0AR = (uint32_t) buffer;
+    DMA1_Stream1->NDTR = length;
+    DMA1_Stream1->CR |= DMA_SxCR_EN;
+}
+
+void UART8_DMA1_Stream4_Write(volatile uint8_t *data, uint16_t length)
+{
+    DMA1_Stream4->M0AR = (uint32_t) data;
+    DMA1_Stream4->NDTR = length;
+    DMA1_Stream4->CR |= DMA_SxCR_EN;
+    while (uart8_tx_finished == 0);
+    uart8_tx_finished = 0;
+}
+
+void UART8_DMA1_Stream0_Read(volatile uint8_t *buffer, uint16_t length)
+{
+    DMA1_Stream0->M0AR = (uint32_t) buffer;
+    DMA1_Stream0->NDTR = length;
+    DMA1_Stream0->CR |= DMA_SxCR_EN;
+}
+
+void UART7_DMA1_Stream2_Read(volatile uint8_t *buffer, uint16_t length)
+{
+    DMA1_Stream2->M0AR = (uint32_t) buffer;
+    DMA1_Stream2->NDTR = length;
+    DMA1_Stream2->CR |= DMA_SxCR_EN;
+}
+
+
+uint8_t Is_USART3_Buffer_Full(void)
+{
+    if (usart3_rx_finished == 0)
+    {
+        return BUFFER_EMPTY;
+    }
+    else
+    {
+        usart3_rx_finished = 0;
+        return BUFFER_FULL;
+    }
+}
+
+uint8_t Is_UART8_Buffer_Full(void)
+{
+    if (uart8_rx_finished == 0)
+    {
+        return BUFFER_EMPTY;
+    }
+    else
+    {
+        uart8_rx_finished = 0;
+        return BUFFER_FULL;
+    }
+}
+
+uint8_t Is_UART7_Buffer_Full(void)
+{
+    if (uart7_rx_finished == 0)
+    {
+        return BUFFER_EMPTY;
+    }
+    else
+    {
+        uart7_rx_finished = 0;
+        return BUFFER_FULL;
+    }
+}
+
+void readRTCTimeBuffer(RTCTimeBuffer *buffer) {
+    uint32_t tmpreg;
+
+    if (buffer != NULL) {
+        buffer->subSeconds = (uint32_t)(RTC->SSR);
+        buffer->secondFraction = (uint32_t)(RTC->PRER & RTC_PRER_PREDIV_S);
+
+        tmpreg = (uint32_t)(RTC->TR & RTC_TR_RESERVED_MASK);
+
+        /* Fill the structure fields with the read parameters */
+        buffer->hours      = (uint8_t)((tmpreg & (RTC_TR_HT  | RTC_TR_HU))  >> RTC_TR_HU_Pos);
+        buffer->minutes    = (uint8_t)((tmpreg & (RTC_TR_MNT | RTC_TR_MNU)) >> RTC_TR_MNU_Pos);
+        buffer->seconds    = (uint8_t)((tmpreg & (RTC_TR_ST  | RTC_TR_SU))  >> RTC_TR_SU_Pos);
+
+         /* Convert the time structure parameters to Binary format */
+        buffer->hours   = (uint8_t)convertBCDToBinary(buffer->hours);
+        buffer->minutes = (uint8_t)convertBCDToBinary(buffer->minutes);
+        buffer->seconds = (uint8_t)convertBCDToBinary(buffer->seconds);
+    }
+}
+
+void _putchar(char character)
+{
+    usart3_tx_data[0] = (uint8_t) character;
+    usart3_tx_data[1] = '\0';
+    USART3_DMA1_Stream3_Write((uint8_t *) usart3_tx_data, 1);
 }
