@@ -6,7 +6,6 @@
 #include "main.h"
 #include "stm32h7xx.h"
 #include "stm32h7xx_ll_dma.h"
-#include "ringbuffer.h"
 #include "gps.h"
 #include "hguide_imu.h"
 #include "printf.h"
@@ -14,25 +13,25 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-#define AF07                (0x7UL)
-#define AF08                (0x8UL)
-#define AF11                (11UL)
+#define AF07                    7UL
+#define AF08                    8UL
+#define AF11                    11UL
 
-#define BUFFER_EMPTY        (0x0UL)
-#define BUFFER_FULL         (0x1UL)
+#define BUFFER_EMPTY            0UL
+#define BUFFER_FULL             1UL
 
-#define GPS_BUF_SIZE        512
-#define HGUIDE_BUF_SIZE     512
-#define LOG_BUF_SIZE        512
+#define GPS_BUFFER_SIZE         512UL
+#define HGUIDE_BUFFER_SIZE      512UL
+#define LOG_BUFFER_SIZE         512UL
 
 #define SIZE(array)         (sizeof(array) / sizeof(array[0]))
 
-__attribute__ ((section(".buffer"))) volatile uint8_t uart8_rx_data[GPS_BUF_SIZE];
-__attribute__ ((section(".buffer"))) volatile uint8_t uart8_tx_data[GPS_BUF_SIZE];
-__attribute__ ((section(".buffer"))) volatile uint8_t uart7_rx_data[HGUIDE_BUF_SIZE];
-__attribute__ ((section(".buffer"))) volatile uint8_t uart7_tx_data[HGUIDE_BUF_SIZE];
-__attribute__ ((section(".buffer"))) volatile uint8_t usart3_rx_data[LOG_BUF_SIZE];
-__attribute__ ((section(".buffer"))) volatile uint8_t usart3_tx_data[LOG_BUF_SIZE];
+__attribute__ ((section(".buffer"))) volatile uint8_t uart8_rx_data[GPS_BUFFER_SIZE];
+__attribute__ ((section(".buffer"))) volatile uint8_t uart8_tx_data[GPS_BUFFER_SIZE];
+__attribute__ ((section(".buffer"))) volatile uint8_t uart7_rx_data[HGUIDE_BUFFER_SIZE];
+__attribute__ ((section(".buffer"))) volatile uint8_t uart7_tx_data[HGUIDE_BUFFER_SIZE];
+__attribute__ ((section(".buffer"))) volatile uint8_t usart3_rx_data[LOG_BUFFER_SIZE];
+__attribute__ ((section(".buffer"))) volatile uint8_t usart3_tx_data[LOG_BUFFER_SIZE];
 
 volatile uint8_t usart3_tx_finished = 0;
 volatile uint8_t usart3_rx_finished = 0;
@@ -151,8 +150,8 @@ int main(void)
     LL_DMA_SetPeriphRequest(DMA1, 4, 82U);
     LL_DMA_SetPeriphRequest(DMA1, 2, 79U);
 
-    GPS_Handle gps_struct;
-    GPS_Handle *gps = &gps_struct;
+    GPS_t _gps;
+    GPS_t *gps = &_gps;
 
     HGuidei300Imu_t hguide_i300_imu;
     HGuidei300Imu_t *pHGuidei300Imu = &hguide_i300_imu;
@@ -160,13 +159,13 @@ int main(void)
     uint8_t empty1[2048] = {[0 ... 2047] = 0};
     uint8_t empty2[2048] = {[0 ... 2047] = 0};
 
-    ringbuf_t buffer;
-    ringbuf_t *buf = &buffer;
+    RingBuffer_t _gps_ring_buffer;
+    RingBuffer_t *gps_ring_buffer = &_gps_ring_buffer;
 
     RingBuffer_t imu_data;
     RingBuffer_t *pHGuidei300ImuData = &imu_data;
 
-    ringbuf_init(buf, empty1, SIZE(empty1));
+    RingBuffer_Init(gps_ring_buffer, empty1, SIZE(empty1));
     RingBuffer_Init(pHGuidei300ImuData, empty2, SIZE(empty2));
 
     NVIC_EnableIRQ(DMA1_Stream0_IRQn);
@@ -175,28 +174,24 @@ int main(void)
     NVIC_EnableIRQ(DMA1_Stream2_IRQn);
     NVIC_EnableIRQ(DMA1_Stream4_IRQn);
 
-    UART8_DMA1_Stream0_Read(uart8_rx_data, GPS_BUF_SIZE);
-    UART7_DMA1_Stream2_Read(uart7_rx_data, HGUIDE_BUF_SIZE);
+    UART8_DMA1_Stream0_Read(uart8_rx_data, GPS_BUFFER_SIZE);
+    UART7_DMA1_Stream2_Read(uart7_rx_data, HGUIDE_BUFFER_SIZE);
 
     while(1)
     {
         if (Is_UART8_Buffer_Full())
         {
-            for (int i = 0; i < SIZE(uart8_rx_data); i++)
-            {
-                ringbuf_put(buf, uart8_rx_data[i]);
-            }
+            RingBuffer_Put(gps_ring_buffer, (uint8_t *) uart8_rx_data, SIZE(uart8_rx_data));
+            GPS_ProcessData(gps, gps_ring_buffer);
 
-            parse_nmea_packet(gps, buf, 1, "GNGLL");
-
-            if (gps->gll.pos_mode != 'A')
+            if (gps->positioning_mode != 'A')
             {
-                printf("Fix mode: %c\n", gps->gll.pos_mode);
+                printf("Fix mode: %c\n", gps->positioning_mode);
                 continue;
             }
 
-            printf("Latitude: %lf N/S: %c Longitude: %lf E/W: %c Checksum: %ld\n",
-                    gps->gll.lat, gps->gll.ns, gps->gll.lon, gps->gll.ew, gps->gll.checksum);
+            printf("Latitude: %lf N/S: %c Longitude: %lf E/W: %c",
+                    gps->latitude, gps->north_south_indicator, gps->longitude, gps->east_west_indicator);
         }
 
         if (Is_UART7_Buffer_Full())

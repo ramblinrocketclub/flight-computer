@@ -1,7 +1,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <math.h>
-#include "ringbuffer_new.h"
 #include "hguide_imu.h"
 
 const double LUT_NEG_POWERS_OF_TWO[] =
