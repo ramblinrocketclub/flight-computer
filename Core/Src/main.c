@@ -153,20 +153,20 @@ int main(void)
     GPS_t _gps;
     GPS_t *gps = &_gps;
 
-    HGuidei300Imu_t hguide_i300_imu;
-    HGuidei300Imu_t *pHGuidei300Imu = &hguide_i300_imu;
+    HGuidei300Imu_t _hguide_imu;
+    HGuidei300Imu_t *hguide_imu = &_hguide_imu;
 
-    uint8_t empty1[2048] = {[0 ... 2047] = 0};
-    uint8_t empty2[2048] = {[0 ... 2047] = 0};
+    uint8_t empty_gps_data[2048] = {[0 ... 2047] = 0};
+    uint8_t empty_hguide_imu_data[2048] = {[0 ... 2047] = 0};
 
-    RingBuffer_t _gps_ring_buffer;
-    RingBuffer_t *gps_ring_buffer = &_gps_ring_buffer;
+    RingBuffer_t _gps_data;
+    RingBuffer_t *gps_data = &_gps_data;
 
-    RingBuffer_t imu_data;
-    RingBuffer_t *pHGuidei300ImuData = &imu_data;
+    RingBuffer_t _hguide_imu_data;
+    RingBuffer_t *hguide_imu_data = &_hguide_imu_data;
 
-    RingBuffer_Init(gps_ring_buffer, empty1, SIZE(empty1));
-    RingBuffer_Init(pHGuidei300ImuData, empty2, SIZE(empty2));
+    RingBuffer_Init(gps_data, empty_gps_data, SIZE(empty_gps_data));
+    RingBuffer_Init(hguide_imu_data, empty_hguide_imu_data, SIZE(empty_hguide_imu_data));
 
     NVIC_EnableIRQ(DMA1_Stream0_IRQn);
     NVIC_EnableIRQ(DMA1_Stream3_IRQn);
@@ -181,8 +181,8 @@ int main(void)
     {
         if (Is_UART8_Buffer_Full())
         {
-            RingBuffer_Put(gps_ring_buffer, (uint8_t *) uart8_rx_data, SIZE(uart8_rx_data));
-            GPS_ProcessData(gps, gps_ring_buffer);
+            RingBuffer_Put(gps_data, (uint8_t *) uart8_rx_data, SIZE(uart8_rx_data));
+            GPS_ProcessData(gps, gps_data);
 
             if (gps->positioning_mode != 'A')
             {
@@ -196,10 +196,10 @@ int main(void)
 
         if (Is_UART7_Buffer_Full())
         {
-            RingBuffer_Put(pHGuidei300ImuData, (uint8_t *) uart7_rx_data, SIZE(uart7_rx_data));
-            ProcessHGuidei300(pHGuidei300Imu, pHGuidei300ImuData);
+            RingBuffer_Put(hguide_imu_data, (uint8_t *) uart7_rx_data, SIZE(uart7_rx_data));
+            ProcessHGuidei300(hguide_imu, hguide_imu_data);
 
-            printf("%lf,%lf,%lf\n", GetLinearAccelerationX(pHGuidei300Imu), GetLinearAccelerationY(pHGuidei300Imu), GetLinearAccelerationZ(pHGuidei300Imu));
+            printf("%lf,%lf,%lf\n", GetLinearAccelerationX(hguide_imu), GetLinearAccelerationY(hguide_imu), GetLinearAccelerationZ(hguide_imu));
         }
     }
 }
