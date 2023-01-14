@@ -1,3 +1,40 @@
+# Repository Structure
+
+Knowing the project structure is essential to understanding the workings of this project and where exactly contribution
+to the project takes place.
+
+## Analysis
+
+The `Analysis` directory contains scripts that aid in analyzing the behavior of the flight software.
+
+## Core
+
+The `Core` directory contains the main code that will be modified and updated to progress the flight software. This is the
+only directory contributers may access and edit.
+
+## Docs
+
+The `Docs` directory contains automatically generated documentation for the project via Doxygen. Do not edit the contents
+of this directory directly.
+
+## Drivers
+
+The `Drivers` directory contains the necessary libraries and drivers for the microcontroller such as register addresses
+and low-level functions.
+
+## Middlewares
+
+The `Middlewares` directory contains middle layers in software such as an RTOS.
+
+## Doxyfile
+
+The `Doxyfile` is a configuration file for Doxygen, which automatically generates documentation for the project based
+on comments place within the code.
+
+## Makefile
+
+The `Makefile` eases the process of compiling the project.
+
 # Contributing
 
 The flight software may be edited with any text editor other than CubeMX or STM32CubeIDE. Contributing comes in
@@ -64,9 +101,3 @@ is done by the following:
 cd gtxr
 make flash
 ```
-
-
-
-The flight computer software is written in c using only the standard peripheral libraries provided
-by STM32 for the STM32H723ZGT6 microcontroller. The program may be compiled using `make` and
-flashed to the microcontroller using `make flash` while in the root project directory.
