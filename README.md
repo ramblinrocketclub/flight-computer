@@ -1,39 +1,3 @@
-# Repository Structure
-
-Knowing the project structure is essential to understanding the workings of this project and where exactly contribution
-to the project takes place.
-
-## Analysis
-
-The `Analysis` directory contains scripts that aid in analyzing the behavior of the flight software.
-
-## Core
-
-The `Core` directory contains the main code that will be modified and updated to progress the flight software. This is the
-only directory contributers may access and edit.
-
-## Docs
-
-The `Docs` directory contains automatically generated documentation for the project via Doxygen. Do not edit the contents
-of this directory directly.
-
-## Drivers
-
-The `Drivers` directory contains the necessary libraries and drivers for the microcontroller such as register addresses
-and low-level functions.
-
-## Middlewares
-
-The `Middlewares` directory contains middle layers in software such as an RTOS.
-
-## Doxyfile
-
-The `Doxyfile` is a configuration file for Doxygen, which automatically generates documentation for the project based
-on comments place within the code.
-
-## Makefile
-
-The `Makefile` eases the process of compiling the project.
 
 # Contributing
 
@@ -61,6 +25,43 @@ You'll need the following tools:
 * [GCC](https://gcc.gnu.org/install/binaries.html)
 * [ARM GNU Toolchain](https://developer.arm.com/downloads/-/gnu-rm)
 * [Stlink](https://github.com/stlink-org/stlink/tree/master)
+
+## Repository Structure
+
+Knowing the project structure is essential to understanding the workings of this project and where exactly contribution
+to the project takes place.
+
+### Analysis
+
+The `Analysis` directory contains scripts that aid in analyzing the behavior of the flight software.
+
+### Core
+
+The `Core` directory contains the main code that will be modified and updated to progress the flight software. This is the
+only directory contributers may access and edit.
+
+### Docs
+
+The `Docs` directory contains automatically generated documentation for the project via Doxygen. Do not edit the contents
+of this directory directly.
+
+### Drivers
+
+The `Drivers` directory contains the necessary libraries and drivers for the microcontroller such as register addresses
+and low-level functions.
+
+### Middlewares
+
+The `Middlewares` directory contains middle layers in software such as an RTOS.
+
+### Doxyfile
+
+The `Doxyfile` is a configuration file for Doxygen, which automatically generates documentation for the project based
+on comments place within the code.
+
+### Makefile
+
+The `Makefile` eases the process of compiling the project.
 
 ## Build and Run
 
