@@ -120,3 +120,38 @@ void GPS_ProcessData(GPS_t *gps, RingBuffer_t *data)
     }
 }
 
+double  GPS_GetTime(GPS_t *gps)
+{
+    return gps->time;
+}
+
+double  GPS_GetLatitude(GPS_t *gps)
+{
+    return gps->latitude;
+}
+
+char    GPS_GetNorthSouthIndicator(GPS_t *gps)
+{
+    return gps->north_south_indicator;
+}
+
+double  GPS_GetLongitude(GPS_t *gps)
+{
+    return gps->longitude;
+}
+
+char    GPS_GetEastWestIndicator(GPS_t *gps)
+{
+    return gps->east_west_indicator;
+}
+
+char    GPS_GetStatus(GPS_t *gps)
+{
+    return gps->status;
+}
+
+char    GPS_GetPositioningMode(GPS_t *gps)
+{
+    return gps->positioning_mode;
+}
+

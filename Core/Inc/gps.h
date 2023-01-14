@@ -49,5 +49,13 @@ typedef struct {
 
 void GPS_ProcessData(GPS_t *gps, RingBuffer_t *data);
 
+double  GPS_GetTime(GPS_t *gps);
+double  GPS_GetLatitude(GPS_t *gps);
+char    GPS_GetNorthSouthIndicator(GPS_t *gps);
+double  GPS_GetLongitude(GPS_t *gps);
+char    GPS_GetEastWestIndicator(GPS_t *gps);
+char    GPS_GetStatus(GPS_t *gps);
+char    GPS_GetPositioningMode(GPS_t *gps);
+
 #endif /* GPS_H */
 
