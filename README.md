@@ -24,6 +24,9 @@ You'll need the following tools:
         * On Debian-based Linux: `sudo apt install build-essential`
 * [ARM GNU Toolchain](https://developer.arm.com/downloads/-/gnu-rm)
 * [Stlink](https://github.com/stlink-org/stlink/tree/master)
+* [MCU Documentation](https://www.st.com/en/microcontrollers-microprocessors/stm32h723-733.html#documentation)
+    * Download the [datasheet](https://www.st.com/resource/en/datasheet/stm32h723ve.pdf) and the
+    [reference manual](https://www.st.com/resource/en/reference_manual/rm0468-stm32h723733-stm32h725735-and-stm32h730-value-line-advanced-armbased-32bit-mcus-stmicroelectronics.pdf)
 
 ## Repository Structure
 
