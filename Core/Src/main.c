@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <math.h>
 #include "main.h"
 #include "stm32h7xx.h"
@@ -18,8 +19,6 @@
 #include "state_machine.h"
 #include "imu_math_helper.h"
 
-#define GRAVITY_CONSTANT_MSEC2 9.81
-
 #define AF07                (0x7UL)
 #define AF08                (0x8UL)
 #define AF11                (11UL)
@@ -31,8 +30,6 @@
 #define HGUIDE_BUF_SIZE     512
 #define LOG_BUF_SIZE        512
 
-#define DT_SECONDS 0.02
-
 #define SIZE(array)         (sizeof(array) / sizeof(array[0]))
 
 // Contains all of the information needed to make flight decisions
@@ -42,6 +39,12 @@ typedef struct FlightStateVariables {
     double verticalPosition; // This position is wrt starting launch height
     double tiltRadians;
 } FlightStateVariables;
+
+const double DT_SECONDS = 0.02;
+const double GRAVITY_CONSTANT_MSEC2 = 9.81;
+
+const double STAGING_TIME_SEC = 7.0;
+const double STAGING_ACCEL_THRESH_MSEC2 = -0.5 * GRAVITY_CONSTANT_MSEC2;
 
 __attribute__ ((section(".buffer"), used)) volatile uint8_t uart8_rx_data[GPS_BUF_SIZE];
 __attribute__ ((section(".buffer"), used)) volatile uint8_t uart8_tx_data[GPS_BUF_SIZE];
@@ -93,6 +96,7 @@ State armed;
 State boost1;
 State fast1;
 State preStage;
+State staging;
 State failedStaging;
 State postStage;
 State sustainerIgnition;
@@ -111,8 +115,8 @@ FlightStateVariables stateVariables;
 KalmanFilter heightEstimator;
 
 // Define filtering constants and matrices
-const float accelStd = 0.1;
-const float accelVar = accelStd * accelStd;
+const float32_t ACCEL_STD = 0.1;
+const float32_t ACCEL_VAR = ACCEL_STD * ACCEL_STD;
 
 float32_t F_f32[4] = {
     1, DT_SECONDS,
@@ -141,7 +145,7 @@ float32_t xHat_f32[2] = {
 
 float32_t stateStdDevs_f32[2] = {
     // Position std, velocity std
-    DT_SECONDS * DT_SECONDS / 2.0 * accelVar, DT_SECONDS * accelVar
+    DT_SECONDS * DT_SECONDS / 2.0 * ACCEL_VAR, DT_SECONDS * ACCEL_VAR
 };
 
 void setup();
@@ -163,6 +167,9 @@ void fast1_finish();
 void pre_stage_initialize();
 State *pre_stage_execute();
 void pre_stage_finish();
+void staging_initialize();
+State *staging_execute();
+void staging_finish();
 void failed_stage_initialize();
 State *failed_stage_execute();
 void failed_stage_finish();
@@ -469,6 +476,10 @@ void setup() {
     preStage.executePtr = &pre_stage_execute;
     preStage.finishPtr = &pre_stage_finish;
 
+    staging.initPtr = &staging_initialize;
+    staging.executePtr = &staging_execute;
+    staging.finishPtr = &staging_finish;
+
     failedStaging.initPtr = &failed_stage_initialize;
     failedStaging.executePtr = &failed_stage_execute;
     failedStaging.finishPtr = &failed_stage_finish;
@@ -561,7 +572,7 @@ void update_flight_state_variables() {
 
     stateVariables.verticalAcceleration = Axyz_global_f32[2];
 
-    float32_t un_f32[1] = { stateVariables.verticalAcceleration - GRAVITY_CONSTANT_MSEC2 };
+    float32_t un_f32[1] = { (float32_t)(stateVariables.verticalAcceleration - GRAVITY_CONSTANT_MSEC2) };
 
     status = predict_kalman_filter(&heightEstimator, un_f32);
 }
@@ -569,10 +580,27 @@ void update_flight_state_variables() {
 // State machine events
 // Safe state
 void safe_initialize() {
-
+    printf("Entered safe state");
 }
 
 State *safe_execute() {
+    double batteryVoltage = 5.0;
+
+    bool ematchesConnected = false;
+    bool pullSwitchesArmed = false;
+    bool gpsLock = false;
+    bool batterySufficient = (batteryVoltage > 4.5);
+    bool healthyCameras = false; 
+
+    // If launch conditions are met, transition to armed state
+    if (ematchesConnected 
+        && pullSwitchesArmed 
+        && gpsLock 
+        && batterySufficient 
+        && healthyCameras) {
+        return &armed;
+    }
+
     return &safe;
 }
 
@@ -582,11 +610,17 @@ void safe_finish() {
 
 // Armed state
 void armed_initialize() {
-
+    printf("Entered armed state");
 }
 
 State *armed_execute() {
-    return &safe;
+    bool boosterIgnition = false;
+
+    if (boosterIgnition) {
+        return &boost1;
+    }
+
+    return &armed;
 }
 
 void armed_finish() {
@@ -595,11 +629,17 @@ void armed_finish() {
 
 // Boost1 state
 void boost1_initialize() {
-
+    printf("Entered boost1 state");
 }
 
 State *boost1_execute() {
-    return &safe;
+    bool boosterBurnout = false;
+
+    if (boosterBurnout) {
+        return &fast1;
+    }
+
+    return &boost1;
 }
 
 void boost1_finish() {
@@ -608,11 +648,17 @@ void boost1_finish() {
 
 // Fast1 state
 void fast1_initialize() {
-
+    printf("Entered fast1 state");
 }
 
 State *fast1_execute() {
-    return &safe;
+    double timeSinceLaunch = 0.0;
+
+    if (timeSinceLaunch >= STAGING_TIME_SEC) {
+        return &preStage;
+    }
+
+    return &fast1;
 }
 
 void fast1_finish() {
@@ -621,15 +667,44 @@ void fast1_finish() {
 
 // Prestage state
 void pre_stage_initialize() {
-
+    printf("Entered PreStage state");
 }
 
 State *pre_stage_execute() {
-    return &safe;
+    bool stagingConditionsMet = false;
+
+    if (stagingConditionsMet) {
+        return &staging;
+    }
+
+    return &preStage;
 }
 
 void pre_stage_finish() {
     
+}
+
+void staging_initialize() {
+    // Attempt stage
+}
+
+State *staging_execute() {
+    bool stagingSuccessful = false;
+    bool stagingWindowPast = false;
+
+    if (stagingSuccessful) {
+        return &postStage;
+    }
+
+    if (!stagingSuccessful && !stagingWindowPast) {
+        return &preStage;
+    }
+
+    return &failedStaging;
+}
+
+void staging_finish() {
+
 }
 
 // Failed staging state
@@ -638,7 +713,19 @@ void failed_stage_initialize() {
 }
 
 State *failed_stage_execute() {
-    return &safe;
+    bool stagingSuccessful = false;
+
+    if (!stagingSuccessful) {
+        // Keep attempting to stage
+    }
+
+    bool gettingCloseToApogee = false;
+
+    if (gettingCloseToApogee) {
+        return &apogee;
+    }
+
+    return &failedStaging;
 }
 
 void failed_stage_finish() {
@@ -651,7 +738,13 @@ void post_stage_initialize() {
 }
 
 State *post_stage_execute() {
-    return &safe;
+    bool withinSustainerIgnitionWindow = false;
+
+    if (withinSustainerIgnitionWindow) {
+        return &sustainerIgnition;
+    }
+
+    return &postStage;
 }
 
 void post_stage_finish() {
@@ -664,7 +757,33 @@ void sustainer_ignition_initialize() {
 }
 
 State *sustainer_ignition_execute() {
-    return &safe;
+    bool sustainerIgnitionConditionsMet = false;
+
+    if (sustainerIgnitionConditionsMet) {
+        // Ignite sustainer
+
+        bool sustainerIgnitionSuccessful = false;
+
+        if (sustainerIgnitionSuccessful) {
+            return &boost2;
+        }
+
+        bool sustainerIgnitionWindowPast = false;
+
+        if (sustainerIgnitionWindowPast) {
+            return &failedSustainerIgnition;
+        }
+
+        return &sustainerIgnition;
+    } else {
+        bool sustainerIgnitionWindowPast = false;
+
+        if (sustainerIgnitionWindowPast) {
+            return &failedSustainerIgnition;
+        }
+
+        return &sustainerIgnition;
+    }
 }
 
 void sustainer_ignition_finish() {
@@ -690,7 +809,13 @@ void boost2_initialize() {
 }
 
 State *boost2_execute() {
-    return &safe;
+    bool sustainerBurnout = false;
+
+    if (sustainerBurnout) {
+        return &fast2;
+    }
+
+    return &boost2;
 }
 
 void boost2_finish() {
@@ -703,7 +828,13 @@ void fast2_initialize() {
 }
 
 State *fast2_execute() {
-    return &safe;
+    bool gettingCloseToApogee = false;
+
+    if (gettingCloseToApogee) {
+        return &apogee;
+    }
+
+    return &fast2;
 }
 
 void fast2_finish() {
@@ -716,7 +847,13 @@ void apogee_initialize() {
 }
 
 State *apogee_execute() {
-    return &safe;
+    bool falling = false;
+
+    if (falling) {
+        return &coast;
+    }
+
+    return &apogee;
 }
 
 void apogee_finish() {
@@ -729,7 +866,19 @@ void coast_initialize() {
 }
 
 State *coast_execute() {
-    return &safe;
+    bool parachuteDeploymentConditionsMet = false;
+
+    if (parachuteDeploymentConditionsMet) {
+        // Deploy parachutes
+
+        bool parachuteDeploymentSuccessful = false;
+
+        if (parachuteDeploymentSuccessful) {
+            return &chute;
+        }
+    }
+
+    return &coast;
 }
 
 void coast_finish() {
@@ -742,7 +891,13 @@ void chute_initialize() {
 }
 
 State *chute_execute() {
-    return &safe;
+    bool hasLanded = false;
+
+    if (hasLanded) {
+        return &landed;
+    }
+
+    return &chute;
 }
 
 void chute_finish() {
