@@ -22,7 +22,6 @@ You'll need the following tools:
             * Run `xcode-select --install` to install the Command Line Tools
     * Linux
         * On Debian-based Linux: `sudo apt install build-essential`
-* [GCC](https://gcc.gnu.org/install/binaries.html)
 * [ARM GNU Toolchain](https://developer.arm.com/downloads/-/gnu-rm)
 * [Stlink](https://github.com/stlink-org/stlink/tree/master)
 
