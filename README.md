@@ -67,19 +67,19 @@ The `Makefile` eases the process of compiling the project.
 
 ### Getting the sources
 
-First, fork the gtxr repository so that you can make a pull request. Then, clone your fork locally:
+First, fork the flight-computer repository so that you can make a pull request. Then, clone your fork locally:
 
 ```
-git clone https://github.com/<<<your-github-account>>>/gtxr.git
+git clone https://github.com/<<<your-github-account>>>/flight-computer.git
 ```
 
 Ocasionally you will want to merge the changes in the upstream repository (the official code repo) with
 your fork
 
 ```
-cd gtxr
+cd flight-computer
 git checkout master
-git pull https://github.com/ramblinrocketclub/gtxr.git master
+git pull https://github.com/ramblinrocketclub/flight-computer.git master
 ```
 
 Manage any merge conflicts, commit them, and then push them to your fork.
@@ -89,7 +89,7 @@ Manage any merge conflicts, commit them, and then push them to your fork.
 Compile the source code using `make`:
 
 ```
-cd gtxr
+cd flight-computer
 make
 ```
 
@@ -99,6 +99,21 @@ You must have a development board in order to run and test code. Flashing code o
 is done by the following:
 
 ```
-cd gtxr
+cd flight-computer
 make flash
 ```
+
+### Making modifications
+
+When making modifications, always ensure that you are doing them within a separate branch. For instance,
+make a branch named `fix-imu-parsing` to fix an issue with the imu parser. Make sure that the names you assign to your
+branches are specific and concise. If an idea you have may take a lot to implement, break it down into bite-sized chunks
+and make all of those chunks branches. This way, testing and development will be much easier. When you have finished writing
+modifications, commit the code and move on to the next step: making a pull request.
+
+### Making a pull request
+
+One you're done with your modifications, it's time to make a pull request and submit your changes. To make a
+pull request, click on the green `Compare & pull request` button that appears when you go back to your forked repository.
+From there, make a descriptive comment about the changes and additions made, and finally submit the pull request to be
+reviewed.
