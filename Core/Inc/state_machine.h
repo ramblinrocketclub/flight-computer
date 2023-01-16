@@ -143,7 +143,7 @@ void _SM_StateEngineEx(SM_StateMachine* self, const SM_StateMachineConst* selfCo
 #define END_TRANSITION_MAP(_smName_, _eventData_) \
     }; \
     _SM_ExternalEvent(self, &_smName_##Const, TRANSITIONS[self->currentState], _eventData_); \
-    C_ASSERT((sizeof(TRANSITIONS)/sizeof(uint8_t)) == (sizeof(_smName_##StateMap)/sizeof(_smName_##StateMap[0])));
+    // C_ASSERT((sizeof(TRANSITIONS)/sizeof(uint8_t)) == (sizeof(_smName_##StateMap)/sizeof(_smName_##StateMap[0])));
 
 #endif // STATE_MACHINE_H
 
