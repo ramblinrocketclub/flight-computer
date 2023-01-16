@@ -186,7 +186,8 @@ int main(void)
 
             if (gps->positioning_mode != 'A')
             {
-                printf("Fix mode: %c\n", gps->positioning_mode);
+                sprintf((char *) usart3_tx_data, "Fix mode: %c\n", gps->positioning_mode);
+                USART3_DMA1_Stream3_Write((uint8_t *) usart3_tx_data, strlen((char *) usart3_tx_data));
                 continue;
             }
 
