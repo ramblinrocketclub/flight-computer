@@ -46,6 +46,7 @@ Core/Src/stm32h7xx_it.c \
 Core/Src/rtc.c \
 Core/Src/state_machine.c \
 Core/Src/rocket.c \
+Core/Src/kalman_filter.c \
 Middlewares/Third_Party/FreeRTOS/Source/croutine.c \
 Middlewares/Third_Party/FreeRTOS/Source/event_groups.c \
 Middlewares/Third_Party/FreeRTOS/Source/list.c \
