@@ -1,0 +1,9 @@
+#ifndef EVENT_CONSTANTS_H
+#define EVENT_CONSTANTS_H
+
+#define GRAVITY_CONSTANT_MSEC2          9.81
+
+#define STAGING_TIME_SEC                7.0
+#define STAGING_ACCEL_THRESH_MSEC2      (-0.5 * GRAVITY_CONSTANT_MSEC2)
+
+#endif /* EVENT_CONSTANTS_H */

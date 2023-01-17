@@ -7,7 +7,7 @@ void sustainer_ignition_initialize() {
 }
 
 State *sustainer_ignition_execute() {
-    return &sustainerIgnition;
+    return &sustainer_ignition;
 }
 
 void sustainer_ignition_finish() {

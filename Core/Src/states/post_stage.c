@@ -7,7 +7,7 @@ void post_stage_initialize() {
 }
 
 State *post_stage_execute() {
-    return &postStage;
+    return &post_stage;
 }
 
 void post_stage_finish() {
