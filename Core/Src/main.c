@@ -97,68 +97,63 @@ int main(void)
 
 void GPIO_Init(void)
 {
-    RCC->AHB4ENR |= RCC_AHB4ENR_GPIODEN;
-    RCC->AHB4ENR |= RCC_AHB4ENR_GPIOEEN;
-    RCC->AHB4ENR |= RCC_AHB4ENR_GPIOBEN;
+    RCC->AHB4ENR |= RCC_AHB4ENR_GPIODEN;    // Enable GPIOD clock
+    RCC->AHB4ENR |= RCC_AHB4ENR_GPIOEEN;    // Enable GPIOE clock
+    RCC->AHB4ENR |= RCC_AHB4ENR_GPIOBEN;    // Enable GPIOB clock
 
-    GPIOD->MODER &= ~(GPIO_MODER_MODE8);
-    GPIOD->MODER &= ~(GPIO_MODER_MODE9);
+    GPIOD->MODER &= ~(GPIO_MODER_MODE8);    // Reset mode of PD8
+    GPIOD->MODER &= ~(GPIO_MODER_MODE9);    // Reset mode of PD9
 
-    GPIOE->MODER &= ~(GPIO_MODER_MODE0);
-    GPIOE->MODER &= ~(GPIO_MODER_MODE1);
+    GPIOE->MODER &= ~(GPIO_MODER_MODE0);    // Reset mode of PE0
+    GPIOE->MODER &= ~(GPIO_MODER_MODE1);    // Reset mode of PE1
 
-    GPIOB->MODER &= ~(GPIO_MODER_MODE3);                                    // reset PB3
-    GPIOB->MODER &= ~(GPIO_MODER_MODE4);                                    // reset PB4
+    GPIOB->MODER &= ~(GPIO_MODER_MODE3);    // Reset mode of PB3
+    GPIOB->MODER &= ~(GPIO_MODER_MODE4);    // Reset mode of PB4
 
-    GPIOB->MODER &= ~(GPIO_MODER_MODE0);
+    GPIOD->MODER |= GPIO_MODER_MODE8_1;     // Set PD8 to AF mode
+    GPIOD->MODER |= GPIO_MODER_MODE9_1;     // Set PD9 to AF mode
 
-    GPIOD->MODER |= GPIO_MODER_MODE8_1;                                     // set PD8 to AF mode
-    GPIOD->MODER |= GPIO_MODER_MODE9_1;                                     // set PD9 to AF mode
+    GPIOB->MODER |= GPIO_MODER_MODE3_1;     // set PB3 to AF mode
+    GPIOB->MODER |= GPIO_MODER_MODE4_1;     // set PB4 to AF mode
 
-    GPIOE->MODER |= GPIO_MODER_MODE0_1;
-    GPIOE->MODER |= GPIO_MODER_MODE1_1;
+    GPIOE->MODER |= GPIO_MODER_MODE0_1;     // Set PE0 to AF mode
+    GPIOE->MODER |= GPIO_MODER_MODE1_1;     // Set PE1 to AF mode
 
-    GPIOB->MODER |= GPIO_MODER_MODE3_1;                                     // set PB3 to AF mode
-    GPIOB->MODER |= GPIO_MODER_MODE4_1;                                     // set PB4 to AF mode
+    GPIOD->AFR[1] |= (AF07 << 0);           // Set PD8 to AF7 (USART3_TX)
+    GPIOD->AFR[1] |= (AF07 << 4);           // Set PD9 to AF8 (USART3_RX)
 
-    GPIOB->MODER |= GPIO_MODER_MODE0_0;
+    GPIOE->AFR[0] |= (AF08 << 0);           // Set PE0 to AF8 (UART8_RX)
+    GPIOE->AFR[0] |= (AF08 << 4);           // Set PE1 to AF8 (UART8_TX)
 
-    GPIOD->AFR[1] |= (AF07 << 0);                                           // set PD8 to AF7 (USART3_TX)
-    GPIOD->AFR[1] |= (AF07 << 4);                                           // set PD9 to AF8 (USART3_RX)
-
-    GPIOE->AFR[0] |= (AF08 << 0);
-    GPIOE->AFR[0] |= (AF08 << 4);
-
-    GPIOB->AFR[0] |= (AF11 << 4 * 3);                                       // set PB3 to AF11 (UART7_RX)
-    GPIOB->AFR[0] |= (AF11 << 4 * 4);                                       // set PB4 to AF11 (UART7_TX)
+    GPIOB->AFR[0] |= (AF11 << 4 * 3);       // set PB3 to AF11 (UART7_RX)
+    GPIOB->AFR[0] |= (AF11 << 4 * 4);       // set PB4 to AF11 (UART7_TX)
 }
 
 void UART_Init(void)
 {
-    RCC->APB1LENR |= RCC_APB1LENR_USART3EN;
-    RCC->APB1LENR |= RCC_APB1LENR_UART8EN;
-    RCC->APB1LENR |= RCC_APB1LENR_UART7EN;
+    RCC->APB1LENR |= RCC_APB1LENR_USART3EN;                         // Enable USART3 clock
+    RCC->APB1LENR |= RCC_APB1LENR_UART8EN;                          // Enable UART8 clock
+    RCC->APB1LENR |= RCC_APB1LENR_UART7EN;                          // Enable UART7 clock
 
-    USART3->BRR = 0x0010;
-    USART3->CR1 = 0;
-    USART3->CR3 |= (USART_CR3_DMAT) | (USART_CR3_DMAR);
-    USART3->CR1 |= (USART_CR1_TE | USART_CR1_RE | USART_CR1_UE);
+    USART3->BRR = 0x0010;                                           // Set baud rate to 4MBd
+    USART3->CR1 = 0;                                                // Reset CR1 register
+    USART3->CR3 |= (USART_CR3_DMAT) | (USART_CR3_DMAR);             // Enable DMA transmit and receive
+    USART3->CR1 |= (USART_CR1_TE | USART_CR1_RE | USART_CR1_UE);    // Enable uart with transmit and receive
 
-    UART8->BRR = 0x0683;
-    UART8->CR1 = 0;
-    UART8->CR3 |= (USART_CR3_DMAT) | (USART_CR3_DMAR);
-    UART8->CR1 |= (USART_CR1_TE | USART_CR1_RE | USART_CR1_UE);
+    UART8->BRR = 0x0683;                                            // Set baud rate to 38400 Bd
+    UART8->CR1 = 0;                                                 // Reset CR1 register
+    UART8->CR3 |= (USART_CR3_DMAT) | (USART_CR3_DMAR);              // Enable DMA transmit and receive
+    UART8->CR1 |= (USART_CR1_TE | USART_CR1_RE | USART_CR1_UE);     // Enable uart with transmit and receive
 
-    UART7->BRR = 0x0045;
-    UART7->CR1 = 0;
-    UART7->CR3 |= (USART_CR3_DMAT) | (USART_CR3_DMAR);
-    UART7->CR1 |= (USART_CR1_TE | USART_CR1_RE | USART_CR1_UE);
+    UART7->BRR = 0x0045;                                            // Set baud rate of 921.6 kBd
+    UART7->CR1 = 0;                                                 // Reset CR1 register
+    UART7->CR3 |= (USART_CR3_DMAT) | (USART_CR3_DMAR);              // Enable DMA transmit and receive
+    UART7->CR1 |= (USART_CR1_TE | USART_CR1_RE | USART_CR1_UE);     // Enable uart with transmit and receive
 }
 
 void DMA_Init(void)
 {
     RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN;
-
 
     DMA1_Stream1->CR &= ~(DMA_SxCR_EN);
     while((DMA1_Stream1->CR & (DMA_SxCR_EN)));
