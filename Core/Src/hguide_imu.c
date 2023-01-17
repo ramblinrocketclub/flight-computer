@@ -279,7 +279,7 @@ uint8_t DeserializeMessageA2(RingBuffer_t *data, MessageA2_t *message_a2)
     return 0;
 }
 
-uint8_t ProcessHGuidei300(HGuidei300Imu_t *imu, RingBuffer_t *data)
+uint8_t ProcessHGuidei300(HGuideIMU_t *imu, RingBuffer_t *data)
 {
     uint8_t trash[1];
     while (1)
@@ -332,62 +332,62 @@ uint8_t ProcessHGuidei300(HGuidei300Imu_t *imu, RingBuffer_t *data)
     return 0;
 }
 
-double  GetAngularRateX(HGuidei300Imu_t *imu)
+double  GetAngularRateX(HGuideIMU_t *imu)
 {
     return imu->angular_rate_x;
 }
 
-double  GetAngularRateY(HGuidei300Imu_t *imu)
+double  GetAngularRateY(HGuideIMU_t *imu)
 {
     return imu->angular_rate_y;
 }
 
-double  GetAngularRateZ(HGuidei300Imu_t *imu)
+double  GetAngularRateZ(HGuideIMU_t *imu)
 {
     return imu->angular_rate_z;
 }
 
-double  GetLinearAccelerationX(HGuidei300Imu_t *imu)
+double  GetLinearAccelerationX(HGuideIMU_t *imu)
 {
     return imu->linear_acceleration_x;
 }
 
-double  GetLinearAccelerationY(HGuidei300Imu_t *imu)
+double  GetLinearAccelerationY(HGuideIMU_t *imu)
 {
     return imu->linear_acceleration_y;
 }
 
-double  GetLinearAccelerationZ(HGuidei300Imu_t *imu)
+double  GetLinearAccelerationZ(HGuideIMU_t *imu)
 {
     return imu->linear_acceleration_z;
 }
 
-double  GetDeltaAngleX(HGuidei300Imu_t *imu)
+double  GetDeltaAngleX(HGuideIMU_t *imu)
 {
     return imu->delta_angle_x;
 }
 
-double  GetDeltaAngleY(HGuidei300Imu_t *imu)
+double  GetDeltaAngleY(HGuideIMU_t *imu)
 {
     return imu->delta_angle_y;
 }
 
-double  GetDeltaAngleZ(HGuidei300Imu_t *imu)
+double  GetDeltaAngleZ(HGuideIMU_t *imu)
 {
     return imu->delta_angle_z;
 }
 
-double  GetDeltaVelocityX(HGuidei300Imu_t *imu)
+double  GetDeltaVelocityX(HGuideIMU_t *imu)
 {
     return imu->delta_velocity_x;
 }
 
-double  GetDeltaVelocityY(HGuidei300Imu_t *imu)
+double  GetDeltaVelocityY(HGuideIMU_t *imu)
 {
     return imu->delta_velocity_y;
 }
 
-double  GetDeltaVelocityZ(HGuidei300Imu_t *imu)
+double  GetDeltaVelocityZ(HGuideIMU_t *imu)
 {
     return imu->delta_velocity_z;
 }

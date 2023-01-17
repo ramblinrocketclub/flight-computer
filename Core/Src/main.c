@@ -46,23 +46,17 @@ int main(void)
     UART_Init();
     DMA_Init();
 
-    GPS_t _gps;
-    GPS_t *gps = &_gps;
-
-    HGuidei300Imu_t _hguide_imu;
-    HGuidei300Imu_t *hguide_imu = &_hguide_imu;
+    GPS_t gps;
+    HGuideIMU_t hguide_imu;
 
     uint8_t empty_gps_data[2048] = {[0 ... 2047] = 0};
     uint8_t empty_hguide_imu_data[2048] = {[0 ... 2047] = 0};
 
-    RingBuffer_t _gps_data;
-    RingBuffer_t *gps_data = &_gps_data;
+    RingBuffer_t gps_data;
+    RingBuffer_t hguide_imu_data;
 
-    RingBuffer_t _hguide_imu_data;
-    RingBuffer_t *hguide_imu_data = &_hguide_imu_data;
-
-    RingBuffer_Init(gps_data, empty_gps_data, SIZE(empty_gps_data));
-    RingBuffer_Init(hguide_imu_data, empty_hguide_imu_data, SIZE(empty_hguide_imu_data));
+    RingBuffer_Init(&gps_data, empty_gps_data, SIZE(empty_gps_data));
+    RingBuffer_Init(&hguide_imu_data, empty_hguide_imu_data, SIZE(empty_hguide_imu_data));
 
     UART8_DMA1_Stream0_Read(uart8_rx_data, GPS_BUFFER_SIZE);
     UART7_DMA1_Stream2_Read(uart7_rx_data, HGUIDE_BUFFER_SIZE);
@@ -71,26 +65,26 @@ int main(void)
     {
         if (Is_UART8_Buffer_Full())
         {
-            RingBuffer_Put(gps_data, (uint8_t *) uart8_rx_data, SIZE(uart8_rx_data));
-            GPS_ProcessData(gps, gps_data);
+            RingBuffer_Put(&gps_data, (uint8_t *) uart8_rx_data, SIZE(uart8_rx_data));
+            GPS_ProcessData(&gps, &gps_data);
 
-            if (gps->positioning_mode != 'A')
+            if (GPS_GetPositioningMode(&gps) != 'A')
             {
-                sprintf((char *) usart3_tx_data, "Fix mode: %c\n", gps->positioning_mode);
+                sprintf((char *) usart3_tx_data, "Fix mode: %c\n", GPS_GetPositioningMode(&gps));
                 USART3_DMA1_Stream3_Write((uint8_t *) usart3_tx_data, strlen((char *) usart3_tx_data));
                 continue;
             }
 
             printf("Latitude: %lf N/S: %c Longitude: %lf E/W: %c",
-                    gps->latitude, gps->north_south_indicator, gps->longitude, gps->east_west_indicator);
+                    GPS_GetLatitude(&gps), GPS_GetNorthSouthIndicator(&gps), GPS_GetLongitude(&gps), GPS_GetEastWestIndicator(&gps));
         }
 
         if (Is_UART7_Buffer_Full())
         {
-            RingBuffer_Put(hguide_imu_data, (uint8_t *) uart7_rx_data, SIZE(uart7_rx_data));
-            ProcessHGuidei300(hguide_imu, hguide_imu_data);
+            RingBuffer_Put(&hguide_imu_data, (uint8_t *) uart7_rx_data, SIZE(uart7_rx_data));
+            ProcessHGuidei300(&hguide_imu, &hguide_imu_data);
 
-            printf("%lf,%lf,%lf\n", GetLinearAccelerationX(hguide_imu), GetLinearAccelerationY(hguide_imu), GetLinearAccelerationZ(hguide_imu));
+            printf("%lf,%lf,%lf\n", GetLinearAccelerationX(&hguide_imu), GetLinearAccelerationY(&hguide_imu), GetLinearAccelerationZ(&hguide_imu));
         }
     }
 }
