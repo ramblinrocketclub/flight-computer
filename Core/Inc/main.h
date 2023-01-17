@@ -3,6 +3,10 @@
 
 #include <stdint.h>
 
+void GPIO_Init(void);
+void UART_Init(void);
+void DMA_Init(void);
+
 void USART3_DMA1_Stream3_Write(volatile uint8_t *data, uint16_t length);
 void USART3_DMA1_Stream1_Read(volatile uint8_t *buffer, uint16_t length);
 void UART8_DMA1_Stream4_Write(volatile uint8_t *data, uint16_t length);
