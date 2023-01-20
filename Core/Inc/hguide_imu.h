@@ -68,7 +68,7 @@ typedef struct
 {
     uint8_t                         sync_byte;
     uint8_t                         message_id;
-    double                          angular_rate_x;
+    double                          angular_rate_x; 
     double                          angular_rate_y;
     double                          angular_rate_z;
     double                          linear_acceleration_x;

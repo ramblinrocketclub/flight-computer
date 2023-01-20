@@ -1,6 +1,6 @@
-#include "states/apogee.h"
+#include "apogee.h"
 
-#include "states/states.h"
+#include "states.h"
 
 void apogee_initialize() {
 

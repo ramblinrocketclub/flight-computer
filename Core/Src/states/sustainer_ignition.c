@@ -1,6 +1,6 @@
-#include "states/sustainer_ignition.h"
+#include "sustainer_ignition.h"
 
-#include "states/states.h"
+#include "states.h"
 
 void sustainer_ignition_initialize() {
 

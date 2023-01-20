@@ -1,6 +1,6 @@
-#include "states/armed.h"
+#include "armed.h"
 
-#include "states/states.h"
+#include "states.h"
 
 void armed_initialize() {
 

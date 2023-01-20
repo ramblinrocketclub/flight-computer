@@ -1,4 +1,4 @@
-#include "states/states.h"
+#include "states.h"
 
 State safe;
 State armed;
