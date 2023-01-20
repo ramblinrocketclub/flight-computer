@@ -90,8 +90,9 @@ void GPSProcessingTask(void *parameters)
 
         else
         {
-            printf("Latitude: %lf N/S: %c Longitude: %lf E/W: %c",
+            sprintf((char *) usart3_tx_data, "Latitude: %lf N/S: %c Longitude: %lf E/W: %c",
                     GPS_GetLatitude(&gps), GPS_GetNorthSouthIndicator(&gps), GPS_GetLongitude(&gps), GPS_GetEastWestIndicator(&gps));
+            USART3_DMA1_Stream3_Write((uint8_t *) usart3_tx_data, strlen((char *) usart3_tx_data));
         }
 
         taskEXIT_CRITICAL();
@@ -195,7 +196,7 @@ void DMA_Init(void)
     while((DMA1_Stream1->CR & (DMA_SxCR_EN)));
 
     DMA1_Stream3->CR &=~(DMA_SxCR_EN);
-	while((DMA1_Stream3->CR &(DMA_SxCR_EN)));
+    while((DMA1_Stream3->CR &(DMA_SxCR_EN)));
 
     DMA1_Stream1->CR |= ((DMA_SxCR_MINC)
                         |(DMA_SxCR_TCIE)
