@@ -1,6 +1,6 @@
-#include "states/landed.h"
+#include "landed.h"
 
-#include "states/states.h"
+#include "states.h"
 
 void landed_initialize() {
 

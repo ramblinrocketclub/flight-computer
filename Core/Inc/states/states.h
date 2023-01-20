@@ -2,8 +2,8 @@
 #define STATES_H
 
 #include "state_machine.h"
-#include "states/flight_state_variables.h"
-#include "states/event_constants.h"
+#include "flight_state_variables.h"
+#include "event_constants.h"
 
 #define INIT_STATE(state, init_fn, execute_fn, finish_fn) { \
                             state.initPtr = &init_fn;       \

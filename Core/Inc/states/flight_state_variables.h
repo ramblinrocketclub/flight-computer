@@ -4,6 +4,7 @@
 // Contains all of the information needed to make flight decisions
 typedef struct FlightStateVariables {
     double time_since_launch_seconds;
+    double last_update_time_seconds;
     double vertical_acceleration_msec2;
     double vertical_velocity_msec;
     double vertical_position_m; // This position is wrt starting launch height

@@ -1,6 +1,6 @@
-#include "states/boost2.h"
+#include "boost2.h"
 
-#include "states/states.h"
+#include "states.h"
 
 void boost2_initialize() {
 

@@ -1,6 +1,6 @@
-#include "states/pre_stage.h"
+#include "pre_stage.h"
 
-#include "states/states.h"
+#include "states.h"
 
 void pre_stage_initialize() {
 

@@ -1,6 +1,6 @@
-#include "states/coast.h"
+#include "coast.h"
 
-#include "states/states.h"
+#include "states.h"
 
 void coast_initialize() {
 
