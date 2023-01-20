@@ -114,22 +114,22 @@ typedef struct
     double delta_velocity_x;
     double delta_velocity_y;
     double delta_velocity_z;
-} HGuidei300Imu_t;
+} HGuideIMU_t;
 
-uint8_t ProcessHGuidei300(HGuidei300Imu_t *imu, RingBuffer_t *data);
+uint8_t ProcessHGuidei300(HGuideIMU_t *imu, RingBuffer_t *data);
 
-double  GetAngularRateX(HGuidei300Imu_t *imu);
-double  GetAngularRateY(HGuidei300Imu_t *imu);
-double  GetAngularRateZ(HGuidei300Imu_t *imu);
-double  GetLinearAccelerationX(HGuidei300Imu_t *imu);
-double  GetLinearAccelerationY(HGuidei300Imu_t *imu);
-double  GetLinearAccelerationZ(HGuidei300Imu_t *imu);
-double  GetDeltaAngleX(HGuidei300Imu_t *imu);
-double  GetDeltaAngleY(HGuidei300Imu_t *imu);
-double  GetDeltaAngleZ(HGuidei300Imu_t *imu);
-double  GetDeltaVelocityX(HGuidei300Imu_t *imu);
-double  GetDeltaVelocityY(HGuidei300Imu_t *imu);
-double  GetDeltaVelocityZ(HGuidei300Imu_t *imu);
+double  GetAngularRateX(HGuideIMU_t *imu);
+double  GetAngularRateY(HGuideIMU_t *imu);
+double  GetAngularRateZ(HGuideIMU_t *imu);
+double  GetLinearAccelerationX(HGuideIMU_t *imu);
+double  GetLinearAccelerationY(HGuideIMU_t *imu);
+double  GetLinearAccelerationZ(HGuideIMU_t *imu);
+double  GetDeltaAngleX(HGuideIMU_t *imu);
+double  GetDeltaAngleY(HGuideIMU_t *imu);
+double  GetDeltaAngleZ(HGuideIMU_t *imu);
+double  GetDeltaVelocityX(HGuideIMU_t *imu);
+double  GetDeltaVelocityY(HGuideIMU_t *imu);
+double  GetDeltaVelocityZ(HGuideIMU_t *imu);
 
 #endif /* HGUIDE_IMU_H */
 

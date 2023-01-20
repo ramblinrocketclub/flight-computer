@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
+#include <limits.h>
 #include "main.h"
 #include "stm32h7xx.h"
 #include "stm32h7xx_ll_dma.h"
@@ -10,8 +11,6 @@
 #include "hguide_imu.h"
 #include "printf.h"
 #include "rtc.h"
-#include "FreeRTOS.h"
-#include "task.h"
 
 #define AF07                    7UL
 #define AF08                    8UL
@@ -40,62 +39,156 @@ volatile uint8_t uart8_rx_finished = 0;
 volatile uint8_t uart7_tx_finished = 0;
 volatile uint8_t uart7_rx_finished = 0;
 
+TaskHandle_t hguide_imu_processing_task_handle = NULL;
+TaskHandle_t gps_processing_task_handle = NULL;
+
+void HGuideIMUProcessingTask(void *parameters)
+{
+    HGuideIMU_t hguide_imu;
+    uint8_t empty_hguide_imu_data[2048] = {[0 ... 2047] = 0};
+    RingBuffer_t hguide_imu_data;
+    RingBuffer_Init(&hguide_imu_data, empty_hguide_imu_data, SIZE(empty_hguide_imu_data));
+
+    for (;;)
+    {
+        vTaskSuspend(NULL);
+
+        taskENTER_CRITICAL();
+
+        RingBuffer_Put(&hguide_imu_data, (uint8_t *) uart7_rx_data, SIZE(uart7_rx_data));
+        ProcessHGuidei300(&hguide_imu, &hguide_imu_data);
+
+        printf("%lf,%lf,%lf\n", GetLinearAccelerationX(&hguide_imu), GetLinearAccelerationY(&hguide_imu), GetLinearAccelerationZ(&hguide_imu));
+
+        taskEXIT_CRITICAL();
+    }
+}
+
+void GPSProcessingTask(void *parameters)
+{
+    GPS_t gps;
+    uint8_t empty_gps_data[2048] = {[0 ... 2047] = 0};
+    RingBuffer_t gps_data;
+    RingBuffer_Init(&gps_data, empty_gps_data, SIZE(empty_gps_data));
+
+    for (;;)
+    {
+        vTaskSuspend(NULL);
+
+        taskENTER_CRITICAL();
+
+        RingBuffer_Put(&gps_data, (uint8_t *) uart8_rx_data, SIZE(uart8_rx_data));
+        GPS_ProcessData(&gps, &gps_data);
+
+
+        if (GPS_GetPositioningMode(&gps) != 'A')
+        {
+            sprintf((char *) usart3_tx_data, "Fix mode: %c\n", GPS_GetPositioningMode(&gps));
+            USART3_DMA1_Stream3_Write((uint8_t *) usart3_tx_data, strlen((char *) usart3_tx_data));
+        }
+
+        else
+        {
+            printf("Latitude: %lf N/S: %c Longitude: %lf E/W: %c",
+                    GPS_GetLatitude(&gps), GPS_GetNorthSouthIndicator(&gps), GPS_GetLongitude(&gps), GPS_GetEastWestIndicator(&gps));
+        }
+
+        taskEXIT_CRITICAL();
+    }
+}
+
 int main(void)
 {
-    RCC->AHB4ENR |= RCC_AHB4ENR_GPIODEN;                                    // enable GPIOD clock
-    RCC->AHB4ENR |= RCC_AHB4ENR_GPIOEEN;
-    RCC->AHB4ENR |= RCC_AHB4ENR_GPIOBEN;                                    // enable GPIOB clock
-    RCC->APB1LENR |= RCC_APB1LENR_USART3EN;                                 // enable USART3 clock
-    RCC->APB1LENR |= RCC_APB1LENR_UART8EN;
-    RCC->APB1LENR |= RCC_APB1LENR_UART7EN;
-    RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN;                                     // enable DMA1 clock
+    GPIO_Init();
+    UART_Init();
+    DMA_Init();
 
-    GPIOD->MODER &= ~(GPIO_MODER_MODE8);
-    GPIOD->MODER &= ~(GPIO_MODER_MODE9);
+    xTaskCreate(
+        HGuideIMUProcessingTask,                /* Function that implements the task. */
+        "HGuideIMUProcessing",                  /* Text name for the task. */
+        1024,                                   /* Stack size in words, not bytes. */
+        NULL,                                   /* Parameter passed into the task. */
+        tskIDLE_PRIORITY,                       /* Priority at which the task is created. */
+        &hguide_imu_processing_task_handle);    /* Used to pass out the created task's handle. */
 
-    GPIOE->MODER &= ~(GPIO_MODER_MODE0);
-    GPIOE->MODER &= ~(GPIO_MODER_MODE1);
+    xTaskCreate(
+        GPSProcessingTask,              /* Function that implements the task. */
+        "GPSProcessing",                /* Text name for the task. */
+        1024,                           /* Stack size in words, not bytes. */
+        NULL,                           /* Parameter passed into the task. */
+        tskIDLE_PRIORITY,               /* Priority at which the task is created. */
+        &gps_processing_task_handle);   /* Used to pass out the created task's handle. */
 
-    GPIOB->MODER &= ~(GPIO_MODER_MODE3);                                    // reset PB3
-    GPIOB->MODER &= ~(GPIO_MODER_MODE4);                                    // reset PB4
+    UART8_DMA1_Stream0_Read(uart8_rx_data, GPS_BUFFER_SIZE);
+    UART7_DMA1_Stream2_Read(uart7_rx_data, HGUIDE_BUFFER_SIZE);
 
-    GPIOB->MODER &= ~(GPIO_MODER_MODE0);
+    vTaskStartScheduler();
 
-    GPIOD->MODER |= GPIO_MODER_MODE8_1;                                     // set PD8 to AF mode
-    GPIOD->MODER |= GPIO_MODER_MODE9_1;                                     // set PD9 to AF mode
+    while(1)
+    {
 
-    GPIOE->MODER |= GPIO_MODER_MODE0_1;
-    GPIOE->MODER |= GPIO_MODER_MODE1_1;
+    }
+}
 
-    GPIOB->MODER |= GPIO_MODER_MODE3_1;                                     // set PB3 to AF mode
-    GPIOB->MODER |= GPIO_MODER_MODE4_1;                                     // set PB4 to AF mode
+void GPIO_Init(void)
+{
+    RCC->AHB4ENR |= RCC_AHB4ENR_GPIODEN;    // Enable GPIOD clock
+    RCC->AHB4ENR |= RCC_AHB4ENR_GPIOEEN;    // Enable GPIOE clock
+    RCC->AHB4ENR |= RCC_AHB4ENR_GPIOBEN;    // Enable GPIOB clock
 
-    GPIOB->MODER |= GPIO_MODER_MODE0_0;
+    GPIOD->MODER &= ~(GPIO_MODER_MODE8);    // Reset mode of PD8
+    GPIOD->MODER &= ~(GPIO_MODER_MODE9);    // Reset mode of PD9
 
-    GPIOD->AFR[1] |= (AF07 << 0);                                           // set PD8 to AF7 (USART3_TX)
-    GPIOD->AFR[1] |= (AF07 << 4);                                           // set PD9 to AF8 (USART3_RX)
+    GPIOE->MODER &= ~(GPIO_MODER_MODE0);    // Reset mode of PE0
+    GPIOE->MODER &= ~(GPIO_MODER_MODE1);    // Reset mode of PE1
 
-    GPIOE->AFR[0] |= (AF08 << 0);
-    GPIOE->AFR[0] |= (AF08 << 4);
+    GPIOB->MODER &= ~(GPIO_MODER_MODE3);    // Reset mode of PB3
+    GPIOB->MODER &= ~(GPIO_MODER_MODE4);    // Reset mode of PB4
 
-    GPIOB->AFR[0] |= (AF11 << 4 * 3);                                       // set PB3 to AF11 (UART7_RX)
-    GPIOB->AFR[0] |= (AF11 << 4 * 4);                                       // set PB4 to AF11 (UART7_TX)
+    GPIOD->MODER |= GPIO_MODER_MODE8_1;     // Set PD8 to AF mode
+    GPIOD->MODER |= GPIO_MODER_MODE9_1;     // Set PD9 to AF mode
 
-    USART3->BRR = 0x0010;
-    USART3->CR1 = 0;
-    USART3->CR3 |= (USART_CR3_DMAT) | (USART_CR3_DMAR);
-    USART3->CR1 |= (USART_CR1_TE | USART_CR1_RE | USART_CR1_UE);
+    GPIOB->MODER |= GPIO_MODER_MODE3_1;     // set PB3 to AF mode
+    GPIOB->MODER |= GPIO_MODER_MODE4_1;     // set PB4 to AF mode
 
-    UART8->BRR = 0x0683;
-    UART8->CR1 = 0;
-    UART8->CR3 |= (USART_CR3_DMAT) | (USART_CR3_DMAR);
-    UART8->CR1 |= (USART_CR1_TE | USART_CR1_RE | USART_CR1_UE);
+    GPIOE->MODER |= GPIO_MODER_MODE0_1;     // Set PE0 to AF mode
+    GPIOE->MODER |= GPIO_MODER_MODE1_1;     // Set PE1 to AF mode
 
-    UART7->BRR = 0x0045;
-    UART7->CR1 = 0;
-    UART7->CR3 |= (USART_CR3_DMAT) | (USART_CR3_DMAR);
-    UART7->CR1 |= (USART_CR1_TE | USART_CR1_RE | USART_CR1_UE);
+    GPIOD->AFR[1] |= (AF07 << 0);           // Set PD8 to AF7 (USART3_TX)
+    GPIOD->AFR[1] |= (AF07 << 4);           // Set PD9 to AF8 (USART3_RX)
 
+    GPIOE->AFR[0] |= (AF08 << 0);           // Set PE0 to AF8 (UART8_RX)
+    GPIOE->AFR[0] |= (AF08 << 4);           // Set PE1 to AF8 (UART8_TX)
+
+    GPIOB->AFR[0] |= (AF11 << 4 * 3);       // set PB3 to AF11 (UART7_RX)
+    GPIOB->AFR[0] |= (AF11 << 4 * 4);       // set PB4 to AF11 (UART7_TX)
+}
+
+void UART_Init(void)
+{
+    RCC->APB1LENR |= RCC_APB1LENR_USART3EN;                         // Enable USART3 clock
+    RCC->APB1LENR |= RCC_APB1LENR_UART8EN;                          // Enable UART8 clock
+    RCC->APB1LENR |= RCC_APB1LENR_UART7EN;                          // Enable UART7 clock
+
+    USART3->BRR = 0x0010;                                           // Set baud rate to 4MBd
+    USART3->CR1 = 0;                                                // Reset CR1 register
+    USART3->CR3 |= (USART_CR3_DMAT) | (USART_CR3_DMAR);             // Enable DMA transmit and receive
+    USART3->CR1 |= (USART_CR1_TE | USART_CR1_RE | USART_CR1_UE);    // Enable uart with transmit and receive
+
+    UART8->BRR = 0x0683;                                            // Set baud rate to 38400 Bd
+    UART8->CR1 = 0;                                                 // Reset CR1 register
+    UART8->CR3 |= (USART_CR3_DMAT) | (USART_CR3_DMAR);              // Enable DMA transmit and receive
+    UART8->CR1 |= (USART_CR1_TE | USART_CR1_RE | USART_CR1_UE);     // Enable uart with transmit and receive
+
+    UART7->BRR = 0x0045;                                            // Set baud rate of 921.6 kBd
+    UART7->CR1 = 0;                                                 // Reset CR1 register
+    UART7->CR3 |= (USART_CR3_DMAT) | (USART_CR3_DMAR);              // Enable DMA transmit and receive
+    UART7->CR1 |= (USART_CR1_TE | USART_CR1_RE | USART_CR1_UE);     // Enable uart with transmit and receive
+}
+
+void DMA_Init(void)
+{
+    RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN;
 
     DMA1_Stream1->CR &= ~(DMA_SxCR_EN);
     while((DMA1_Stream1->CR & (DMA_SxCR_EN)));
@@ -144,65 +237,23 @@ int main(void)
 
     DMA1_Stream2->PAR = (uint32_t) &UART7->RDR;
 
-    LL_DMA_SetPeriphRequest(DMA1, 3, 46U);
-    LL_DMA_SetPeriphRequest(DMA1, 1, 45U);
     LL_DMA_SetPeriphRequest(DMA1, 0, 81U);
-    LL_DMA_SetPeriphRequest(DMA1, 4, 82U);
+    LL_DMA_SetPeriphRequest(DMA1, 1, 45U);
     LL_DMA_SetPeriphRequest(DMA1, 2, 79U);
+    LL_DMA_SetPeriphRequest(DMA1, 3, 46U);
+    LL_DMA_SetPeriphRequest(DMA1, 4, 82U);
 
-    GPS_t _gps;
-    GPS_t *gps = &_gps;
-
-    HGuidei300Imu_t _hguide_imu;
-    HGuidei300Imu_t *hguide_imu = &_hguide_imu;
-
-    uint8_t empty_gps_data[2048] = {[0 ... 2047] = 0};
-    uint8_t empty_hguide_imu_data[2048] = {[0 ... 2047] = 0};
-
-    RingBuffer_t _gps_data;
-    RingBuffer_t *gps_data = &_gps_data;
-
-    RingBuffer_t _hguide_imu_data;
-    RingBuffer_t *hguide_imu_data = &_hguide_imu_data;
-
-    RingBuffer_Init(gps_data, empty_gps_data, SIZE(empty_gps_data));
-    RingBuffer_Init(hguide_imu_data, empty_hguide_imu_data, SIZE(empty_hguide_imu_data));
+    NVIC_SetPriority(DMA1_Stream0_IRQn, 5);
+    NVIC_SetPriority(DMA1_Stream1_IRQn, 5);
+    NVIC_SetPriority(DMA1_Stream2_IRQn, 5);
+    NVIC_SetPriority(DMA1_Stream3_IRQn, 4);
+    NVIC_SetPriority(DMA1_Stream4_IRQn, 5);
 
     NVIC_EnableIRQ(DMA1_Stream0_IRQn);
-    NVIC_EnableIRQ(DMA1_Stream3_IRQn);
     NVIC_EnableIRQ(DMA1_Stream1_IRQn);
     NVIC_EnableIRQ(DMA1_Stream2_IRQn);
+    NVIC_EnableIRQ(DMA1_Stream3_IRQn);
     NVIC_EnableIRQ(DMA1_Stream4_IRQn);
-
-    UART8_DMA1_Stream0_Read(uart8_rx_data, GPS_BUFFER_SIZE);
-    UART7_DMA1_Stream2_Read(uart7_rx_data, HGUIDE_BUFFER_SIZE);
-
-    while(1)
-    {
-        if (Is_UART8_Buffer_Full())
-        {
-            RingBuffer_Put(gps_data, (uint8_t *) uart8_rx_data, SIZE(uart8_rx_data));
-            GPS_ProcessData(gps, gps_data);
-
-            if (gps->positioning_mode != 'A')
-            {
-                sprintf((char *) usart3_tx_data, "Fix mode: %c\n", gps->positioning_mode);
-                USART3_DMA1_Stream3_Write((uint8_t *) usart3_tx_data, strlen((char *) usart3_tx_data));
-                continue;
-            }
-
-            printf("Latitude: %lf N/S: %c Longitude: %lf E/W: %c",
-                    gps->latitude, gps->north_south_indicator, gps->longitude, gps->east_west_indicator);
-        }
-
-        if (Is_UART7_Buffer_Full())
-        {
-            RingBuffer_Put(hguide_imu_data, (uint8_t *) uart7_rx_data, SIZE(uart7_rx_data));
-            ProcessHGuidei300(hguide_imu, hguide_imu_data);
-
-            printf("%lf,%lf,%lf\n", GetLinearAccelerationX(hguide_imu), GetLinearAccelerationY(hguide_imu), GetLinearAccelerationZ(hguide_imu));
-        }
-    }
 }
 
 void USART3_DMA1_Stream3_Write(volatile uint8_t *data, uint16_t length)
