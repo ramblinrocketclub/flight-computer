@@ -58,7 +58,8 @@ void HGuideIMUProcessingTask(void *parameters)
         RingBuffer_Put(&hguide_imu_data, (uint8_t *) uart7_rx_data, SIZE(uart7_rx_data));
         ProcessHGuidei300(&hguide_imu, &hguide_imu_data);
 
-        printf("%lf,%lf,%lf\n", GetLinearAccelerationX(&hguide_imu), GetLinearAccelerationY(&hguide_imu), GetLinearAccelerationZ(&hguide_imu));
+        sprintf((char *) usart3_tx_data, "%lf,%lf,%lf\n", GetLinearAccelerationX(&hguide_imu), GetLinearAccelerationY(&hguide_imu), GetLinearAccelerationZ(&hguide_imu));
+        USART3_DMA1_Stream3_Write((uint8_t *) usart3_tx_data, strlen((char *) usart3_tx_data));
 
         taskEXIT_CRITICAL();
     }
