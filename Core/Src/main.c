@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
+#include <limits.h>
 #include "main.h"
 #include "stm32h7xx.h"
 #include "stm32h7xx_ll_dma.h"
@@ -10,8 +11,6 @@
 #include "hguide_imu.h"
 #include "printf.h"
 #include "rtc.h"
-#include "FreeRTOS.h"
-#include "task.h"
 
 #define AF07                    7UL
 #define AF08                    8UL
@@ -40,52 +39,94 @@ volatile uint8_t uart8_rx_finished = 0;
 volatile uint8_t uart7_tx_finished = 0;
 volatile uint8_t uart7_rx_finished = 0;
 
+TaskHandle_t hguide_imu_processing_task_handle = NULL;
+TaskHandle_t gps_processing_task_handle = NULL;
+
+void HGuideIMUProcessingTask(void *parameters)
+{
+    HGuideIMU_t hguide_imu;
+    uint8_t empty_hguide_imu_data[2048] = {[0 ... 2047] = 0};
+    RingBuffer_t hguide_imu_data;
+    RingBuffer_Init(&hguide_imu_data, empty_hguide_imu_data, SIZE(empty_hguide_imu_data));
+
+    for (;;)
+    {
+        vTaskSuspend(NULL);
+
+        taskENTER_CRITICAL();
+
+        RingBuffer_Put(&hguide_imu_data, (uint8_t *) uart7_rx_data, SIZE(uart7_rx_data));
+        ProcessHGuidei300(&hguide_imu, &hguide_imu_data);
+
+        printf("%lf,%lf,%lf\n", GetLinearAccelerationX(&hguide_imu), GetLinearAccelerationY(&hguide_imu), GetLinearAccelerationZ(&hguide_imu));
+
+        taskEXIT_CRITICAL();
+    }
+}
+
+void GPSProcessingTask(void *parameters)
+{
+    GPS_t gps;
+    uint8_t empty_gps_data[2048] = {[0 ... 2047] = 0};
+    RingBuffer_t gps_data;
+    RingBuffer_Init(&gps_data, empty_gps_data, SIZE(empty_gps_data));
+
+    for (;;)
+    {
+        vTaskSuspend(NULL);
+
+        taskENTER_CRITICAL();
+
+        RingBuffer_Put(&gps_data, (uint8_t *) uart8_rx_data, SIZE(uart8_rx_data));
+        GPS_ProcessData(&gps, &gps_data);
+
+
+        if (GPS_GetPositioningMode(&gps) != 'A')
+        {
+            sprintf((char *) usart3_tx_data, "Fix mode: %c\n", GPS_GetPositioningMode(&gps));
+            USART3_DMA1_Stream3_Write((uint8_t *) usart3_tx_data, strlen((char *) usart3_tx_data));
+        }
+
+        else
+        {
+            printf("Latitude: %lf N/S: %c Longitude: %lf E/W: %c",
+                    GPS_GetLatitude(&gps), GPS_GetNorthSouthIndicator(&gps), GPS_GetLongitude(&gps), GPS_GetEastWestIndicator(&gps));
+        }
+
+        taskEXIT_CRITICAL();
+    }
+}
+
 int main(void)
 {
     GPIO_Init();
     UART_Init();
     DMA_Init();
 
-    GPS_t gps;
-    HGuideIMU_t hguide_imu;
+    xTaskCreate(
+        HGuideIMUProcessingTask,                /* Function that implements the task. */
+        "HGuideIMUProcessing",                  /* Text name for the task. */
+        1024,                                   /* Stack size in words, not bytes. */
+        NULL,                                   /* Parameter passed into the task. */
+        tskIDLE_PRIORITY,                       /* Priority at which the task is created. */
+        &hguide_imu_processing_task_handle);    /* Used to pass out the created task's handle. */
 
-    uint8_t empty_gps_data[2048] = {[0 ... 2047] = 0};
-    uint8_t empty_hguide_imu_data[2048] = {[0 ... 2047] = 0};
-
-    RingBuffer_t gps_data;
-    RingBuffer_t hguide_imu_data;
-
-    RingBuffer_Init(&gps_data, empty_gps_data, SIZE(empty_gps_data));
-    RingBuffer_Init(&hguide_imu_data, empty_hguide_imu_data, SIZE(empty_hguide_imu_data));
+    xTaskCreate(
+        GPSProcessingTask,              /* Function that implements the task. */
+        "GPSProcessing",                /* Text name for the task. */
+        1024,                           /* Stack size in words, not bytes. */
+        NULL,                           /* Parameter passed into the task. */
+        tskIDLE_PRIORITY,               /* Priority at which the task is created. */
+        &gps_processing_task_handle);   /* Used to pass out the created task's handle. */
 
     UART8_DMA1_Stream0_Read(uart8_rx_data, GPS_BUFFER_SIZE);
     UART7_DMA1_Stream2_Read(uart7_rx_data, HGUIDE_BUFFER_SIZE);
 
+    vTaskStartScheduler();
+
     while(1)
     {
-        if (Is_UART8_Buffer_Full())
-        {
-            RingBuffer_Put(&gps_data, (uint8_t *) uart8_rx_data, SIZE(uart8_rx_data));
-            GPS_ProcessData(&gps, &gps_data);
 
-            if (GPS_GetPositioningMode(&gps) != 'A')
-            {
-                sprintf((char *) usart3_tx_data, "Fix mode: %c\n", GPS_GetPositioningMode(&gps));
-                USART3_DMA1_Stream3_Write((uint8_t *) usart3_tx_data, strlen((char *) usart3_tx_data));
-                continue;
-            }
-
-            printf("Latitude: %lf N/S: %c Longitude: %lf E/W: %c",
-                    GPS_GetLatitude(&gps), GPS_GetNorthSouthIndicator(&gps), GPS_GetLongitude(&gps), GPS_GetEastWestIndicator(&gps));
-        }
-
-        if (Is_UART7_Buffer_Full())
-        {
-            RingBuffer_Put(&hguide_imu_data, (uint8_t *) uart7_rx_data, SIZE(uart7_rx_data));
-            ProcessHGuidei300(&hguide_imu, &hguide_imu_data);
-
-            printf("%lf,%lf,%lf\n", GetLinearAccelerationX(&hguide_imu), GetLinearAccelerationY(&hguide_imu), GetLinearAccelerationZ(&hguide_imu));
-        }
     }
 }
 
@@ -201,6 +242,12 @@ void DMA_Init(void)
     LL_DMA_SetPeriphRequest(DMA1, 2, 79U);
     LL_DMA_SetPeriphRequest(DMA1, 3, 46U);
     LL_DMA_SetPeriphRequest(DMA1, 4, 82U);
+
+    NVIC_SetPriority(DMA1_Stream0_IRQn, 5);
+    NVIC_SetPriority(DMA1_Stream1_IRQn, 5);
+    NVIC_SetPriority(DMA1_Stream2_IRQn, 5);
+    NVIC_SetPriority(DMA1_Stream3_IRQn, 4);
+    NVIC_SetPriority(DMA1_Stream4_IRQn, 5);
 
     NVIC_EnableIRQ(DMA1_Stream0_IRQn);
     NVIC_EnableIRQ(DMA1_Stream1_IRQn);

@@ -222,6 +222,8 @@ void DMA1_Stream3_IRQHandler(void)
 		usart3_tx_finished = 1;
 		DMA1->LIFCR = DMA_LIFCR_CTCIF3;
 	}
+
+    portYIELD_FROM_ISR(pdTRUE);
 }
 
 void DMA1_Stream4_IRQHandler(void)
@@ -231,6 +233,8 @@ void DMA1_Stream4_IRQHandler(void)
 		uart8_tx_finished = 1;
 		DMA1->HIFCR = DMA_HIFCR_CTCIF4;
 	}
+
+    portYIELD_FROM_ISR(pdTRUE);
 }
 
 void DMA1_Stream1_IRQHandler(void)
@@ -240,24 +244,40 @@ void DMA1_Stream1_IRQHandler(void)
         usart3_rx_finished = 1;
         DMA1->LIFCR = DMA_LIFCR_CTCIF1;
     }
+
+    portYIELD_FROM_ISR(pdTRUE);
 }
 
 void DMA1_Stream2_IRQHandler(void)
 {
+    BaseType_t check_if_yield_required;
+
     if(DMA1->LISR & DMA_LISR_TCIF2)
     {
         uart7_rx_finished = 1;
         DMA1->LIFCR = DMA_LIFCR_CTCIF2;
     }
+
+    check_if_yield_required = xTaskResumeFromISR(hguide_imu_processing_task_handle);
+    portYIELD_FROM_ISR(check_if_yield_required);
 }
 
 void DMA1_Stream0_IRQHandler(void)
 {
+    // BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+    BaseType_t check_if_yield_required;
+
     if(DMA1->LISR & DMA_LISR_TCIF0)
     {
         uart8_rx_finished = 1;
         DMA1->LIFCR = DMA_LIFCR_CTCIF0;
     }
+
+    check_if_yield_required = xTaskResumeFromISR(gps_processing_task_handle);
+    portYIELD_FROM_ISR(check_if_yield_required);
+
+	// xTaskNotifyFromISR(gps_processing_task_handle, 0, eNoAction, &xHigherPriorityTaskWoken);
+    // portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
-/* USER CODE END 1 */
 

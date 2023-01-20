@@ -2,6 +2,9 @@
 #define MAIN_H
 
 #include <stdint.h>
+#include "FreeRTOS.h"
+#include "task.h"
+#include "semphr.h"
 
 void GPIO_Init(void);
 void UART_Init(void);
@@ -30,6 +33,9 @@ extern volatile uint8_t uart8_tx_finished;
 extern volatile uint8_t uart8_rx_finished;
 extern volatile uint8_t uart7_tx_finished;
 extern volatile uint8_t uart7_rx_finished;
+
+extern TaskHandle_t hguide_imu_processing_task_handle;
+extern TaskHandle_t gps_processing_task_handle;
 
 #endif /* MAIN_H */
 
