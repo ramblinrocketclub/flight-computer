@@ -1,5 +1,7 @@
 #include "rocket.h"
 
+#include "util.h"
+
 void init_rocket(Rocket *rkt) {
     double msec2_per_microg = 1.0 / 101971.62129779282;
 
@@ -36,12 +38,10 @@ void init_rocket(Rocket *rkt) {
         NOMINAL_DT_SECONDS * rkt->hguide_vertical_accel_std_msec2
     };
 
-    arm_status status = ARM_MATH_SUCCESS;
-
-	status = init_kalman_filter(&rkt->kf, 2, 1, 
+    ARM_CHECK_STATUS(init_kalman_filter(&rkt->kf, 2, 1, 
                                 &rkt->F_f32[0], &rkt->G_f32[0], 
                                 &rkt->P_f32[0], &rkt->Q_f32[0], 
-                                &rkt->xHat_f32[0], &state_std_devs_f32[0]);
+                                &rkt->xHat_f32[0], &state_std_devs_f32[0]));
 }
 
 void calibrate_rocket(Rocket *rkt) {
