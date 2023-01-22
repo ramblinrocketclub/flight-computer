@@ -60,7 +60,7 @@ Core/Src/states/pre_stage.c \
 Core/Src/states/safe.c \
 Core/Src/states/states.c \
 Core/Src/states/sustainer_ignition.c \
-Core/Src/states/update_state_variables.c \
+Core/Src/rocket.c \
 Middlewares/Third_Party/FreeRTOS/Source/croutine.c \
 Middlewares/Third_Party/FreeRTOS/Source/event_groups.c \
 Middlewares/Third_Party/FreeRTOS/Source/list.c \
