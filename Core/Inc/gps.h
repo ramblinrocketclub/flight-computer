@@ -45,6 +45,7 @@ typedef struct {
     char        east_west_indicator;
     char        status;
     char        positioning_mode;
+    double      altitude;
 } GPS_t;
 
 void GPS_ProcessData(GPS_t *gps, RingBuffer_t *data);
