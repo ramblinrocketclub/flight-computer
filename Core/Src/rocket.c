@@ -1,5 +1,6 @@
+#include <stdint.h>
+#include <stddef.h>
 #include "rocket.h"
-
 #include "util.h"
 
 void init_rocket(Rocket *rkt, double timestamp, GPS_t *gpsData) {
@@ -43,13 +44,13 @@ void init_rocket(Rocket *rkt, double timestamp, GPS_t *gpsData) {
 
     float32_t state_std_devs_f32[2] = {
         // Position std, velocity std
-        NOMINAL_DT_SECONDS * NOMINAL_DT_SECONDS / 2.0 * accelVar, 
+        NOMINAL_DT_SECONDS * NOMINAL_DT_SECONDS / 2.0 * accelVar,
         NOMINAL_DT_SECONDS * accelVar
     };
 
-    ARM_CHECK_STATUS(init_kalman_filter(&rkt->kf, 2, 1, 
-                                &rkt->F_f32[0], &rkt->G_f32[0], 
-                                &rkt->P_f32[0], &rkt->Q_f32[0], 
+    ARM_CHECK_STATUS(init_kalman_filter(&rkt->kf, 2, 1,
+                                &rkt->F_f32[0], &rkt->G_f32[0],
+                                &rkt->P_f32[0], &rkt->Q_f32[0],
                                 &rkt->xHat_f32[0], &state_std_devs_f32[0]));
 }
 
@@ -90,8 +91,9 @@ void update_rocket_state_variables(Rocket *rkt, double currentTimeS, HGuideIMU_t
         rkt->kf.Q.pData[0] = (dt * dt * dt * dt) / 4.0 * accelVar;
         rkt->kf.Q.pData[1] = (dt * dt * dt) / 2.0 * accelVar;
         rkt->kf.Q.pData[2] = (dt * dt * dt) / 2.0 * accelVar;
-        rkt->kf.Q.pData[3] = dt * dt * accelVar;   
+        rkt->kf.Q.pData[3] = dt * dt * accelVar;
 
         rkt->fsv.last_predict_time_seconds = currentTimeS;
     }
 }
+
