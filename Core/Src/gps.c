@@ -155,3 +155,6 @@ char    GPS_GetPositioningMode(GPS_t *gps)
     return gps->positioning_mode;
 }
 
+double  GPS_GetAltitudeMeters(GPS_t *gps) {
+    return gps->altitude_meters;
+}

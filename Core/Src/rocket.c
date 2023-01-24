@@ -58,9 +58,9 @@ void calibrate_rocket(Rocket *rkt, HGuideIMU_t *hguideData) {
     arm_mat_init_f32(&rkt->hguide_local_to_world_3x3, 3, 3, rkt->hguide_local_to_world_3x3_f32);
 
     float32_t Axyz[3] = {
-        GetLinearAccelerationX(hguideData),
-        GetLinearAccelerationY(hguideData),
-        GetLinearAccelerationZ(hguideData)
+        GetLinearAccelerationXMsec2(hguideData),
+        GetLinearAccelerationYMsec2(hguideData),
+        GetLinearAccelerationZMsec2(hguideData)
     };
 
     calibrate_imu(Axyz, &rkt->hguide_local_to_world_3x3);
@@ -92,6 +92,8 @@ void update_rocket_state_variables(Rocket *rkt, double currentTimeS, HGuideIMU_t
         rkt->kf.Q.pData[1] = (dt * dt * dt) / 2.0 * accelVar;
         rkt->kf.Q.pData[2] = (dt * dt * dt) / 2.0 * accelVar;
         rkt->kf.Q.pData[3] = dt * dt * accelVar;
+
+
 
         rkt->fsv.last_predict_time_seconds = currentTimeS;
     }

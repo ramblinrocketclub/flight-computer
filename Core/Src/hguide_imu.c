@@ -123,13 +123,13 @@ uint8_t DeserializeMessageA1(RingBuffer_t *data, MessageA1_t *message_a1)
     message_a1->sync_byte               = message_bytes[0];
     message_a1->message_id              = message_bytes[1];
 
-    message_a1->angular_rate_x          = (double)((int16_t) (message_bytes[2] + (message_bytes[3] << 8))) * (LUT_NEG_POWERS_OF_TWO[11]);
-    message_a1->angular_rate_y          = (double)((int16_t) (message_bytes[4] + (message_bytes[5] << 8))) * (LUT_NEG_POWERS_OF_TWO[11]);
-    message_a1->angular_rate_z          = (double)((int16_t) (message_bytes[6] + (message_bytes[7] << 8))) * (LUT_NEG_POWERS_OF_TWO[11]);
+    message_a1->angular_rate_x_rad_per_sec          = (double)((int16_t) (message_bytes[2] + (message_bytes[3] << 8))) * (LUT_NEG_POWERS_OF_TWO[11]);
+    message_a1->angular_rate_y_rad_per_sec          = (double)((int16_t) (message_bytes[4] + (message_bytes[5] << 8))) * (LUT_NEG_POWERS_OF_TWO[11]);
+    message_a1->angular_rate_z_rad_per_sec          = (double)((int16_t) (message_bytes[6] + (message_bytes[7] << 8))) * (LUT_NEG_POWERS_OF_TWO[11]);
 
-    message_a1->linear_acceleration_x   = (double)((int16_t) (message_bytes[8] + (message_bytes[9] << 8))) * (LUT_NEG_POWERS_OF_TWO[5] * 0.3048);
-    message_a1->linear_acceleration_y   = (double)((int16_t) (message_bytes[10] + (message_bytes[11] << 8))) * (LUT_NEG_POWERS_OF_TWO[5] * 0.3048);
-    message_a1->linear_acceleration_z   = (double)((int16_t) (message_bytes[12] + (message_bytes[13] << 8))) * (LUT_NEG_POWERS_OF_TWO[5] * 0.3048);
+    message_a1->linear_acceleration_x_msec2         = (double)((int16_t) (message_bytes[8] + (message_bytes[9] << 8))) * (LUT_NEG_POWERS_OF_TWO[5] * 0.3048);
+    message_a1->linear_acceleration_y_msec2         = (double)((int16_t) (message_bytes[10] + (message_bytes[11] << 8))) * (LUT_NEG_POWERS_OF_TWO[5] * 0.3048);
+    message_a1->linear_acceleration_z_msec2         = (double)((int16_t) (message_bytes[12] + (message_bytes[13] << 8))) * (LUT_NEG_POWERS_OF_TWO[5] * 0.3048);
 
     uint8_t lsb_status_word_1                           = message_bytes[14];
     uint8_t msb_status_word_1                           = message_bytes[15];
@@ -205,13 +205,13 @@ uint8_t DeserializeMessageA2(RingBuffer_t *data, MessageA2_t *message_a2)
     message_a2->sync_byte               = message_bytes[0];
     message_a2->message_id              = message_bytes[1];
 
-    message_a2->angular_rate_x          = (double)((int16_t) (message_bytes[2] + (message_bytes[3] << 8))) * (LUT_NEG_POWERS_OF_TWO[11]);
-    message_a2->angular_rate_y          = (double)((int16_t) (message_bytes[4] + (message_bytes[5] << 8))) * (LUT_NEG_POWERS_OF_TWO[11]);
-    message_a2->angular_rate_z          = (double)((int16_t) (message_bytes[6] + (message_bytes[7] << 8))) * (LUT_NEG_POWERS_OF_TWO[11]);
+    message_a2->angular_rate_x_rad_per_sec          = (double)((int16_t) (message_bytes[2] + (message_bytes[3] << 8))) * (LUT_NEG_POWERS_OF_TWO[11]);
+    message_a2->angular_rate_y_rad_per_sec          = (double)((int16_t) (message_bytes[4] + (message_bytes[5] << 8))) * (LUT_NEG_POWERS_OF_TWO[11]);
+    message_a2->angular_rate_z_rad_per_sec          = (double)((int16_t) (message_bytes[6] + (message_bytes[7] << 8))) * (LUT_NEG_POWERS_OF_TWO[11]);
 
-    message_a2->linear_acceleration_x   = (double)((int16_t) (message_bytes[8] + (message_bytes[9] << 8))) * (LUT_NEG_POWERS_OF_TWO[5] * 0.3048);
-    message_a2->linear_acceleration_y   = (double)((int16_t) (message_bytes[10] + (message_bytes[11] << 8))) * (LUT_NEG_POWERS_OF_TWO[5] * 0.3048);
-    message_a2->linear_acceleration_z   = (double)((int16_t) (message_bytes[12] + (message_bytes[13] << 8))) * (LUT_NEG_POWERS_OF_TWO[5] * 0.3048);
+    message_a2->linear_acceleration_x_msec2         = (double)((int16_t) (message_bytes[8] + (message_bytes[9] << 8))) * (LUT_NEG_POWERS_OF_TWO[5] * 0.3048);
+    message_a2->linear_acceleration_y_msec2         = (double)((int16_t) (message_bytes[10] + (message_bytes[11] << 8))) * (LUT_NEG_POWERS_OF_TWO[5] * 0.3048);
+    message_a2->linear_acceleration_z_msec2         = (double)((int16_t) (message_bytes[12] + (message_bytes[13] << 8))) * (LUT_NEG_POWERS_OF_TWO[5] * 0.3048);
 
 
     uint8_t lsb_status_word_1                           = message_bytes[14];
@@ -265,13 +265,13 @@ uint8_t DeserializeMessageA2(RingBuffer_t *data, MessageA2_t *message_a2)
         message_a2->multiplexed_status_word_2.device_temperature    = (lsb_multiplexed_status_word_2 + (msb_multiplexed_status_word_2 << 8)) * pow((double) 2, (double) -8);
     }
 
-    message_a2->delta_angle_x       = (double) ((int32_t) (message_bytes[18] + (message_bytes[19] << 8) + (message_bytes[20] << 16) + (message_bytes[21] << 24))) * (LUT_NEG_POWERS_OF_TWO[33]);
-    message_a2->delta_angle_y       = (double) ((int32_t) (message_bytes[22] + (message_bytes[23] << 8) + (message_bytes[24] << 16) + (message_bytes[25] << 24))) * (LUT_NEG_POWERS_OF_TWO[33]);
-    message_a2->delta_angle_z       = (double) ((int32_t) (message_bytes[26] + (message_bytes[27] << 8) + (message_bytes[28] << 16) + (message_bytes[29] << 24))) * (LUT_NEG_POWERS_OF_TWO[33]);
+    message_a2->delta_angle_x_rad           = (double) ((int32_t) (message_bytes[18] + (message_bytes[19] << 8) + (message_bytes[20] << 16) + (message_bytes[21] << 24))) * (LUT_NEG_POWERS_OF_TWO[33]);
+    message_a2->delta_angle_y_rad           = (double) ((int32_t) (message_bytes[22] + (message_bytes[23] << 8) + (message_bytes[24] << 16) + (message_bytes[25] << 24))) * (LUT_NEG_POWERS_OF_TWO[33]);
+    message_a2->delta_angle_z_rad           = (double) ((int32_t) (message_bytes[26] + (message_bytes[27] << 8) + (message_bytes[28] << 16) + (message_bytes[29] << 24))) * (LUT_NEG_POWERS_OF_TWO[33]);
 
-    message_a2->delta_velocity_x    = (double) ((int32_t) (message_bytes[30] + (message_bytes[31] << 8) + (message_bytes[32] << 16) + (message_bytes[33] << 24))) * (LUT_NEG_POWERS_OF_TWO[27] * 0.3048);
-    message_a2->delta_velocity_y    = (double) ((int32_t) (message_bytes[34] + (message_bytes[35] << 8) + (message_bytes[36] << 16) + (message_bytes[37] << 24))) * (LUT_NEG_POWERS_OF_TWO[27] * 0.3048);
-    message_a2->delta_velocity_z    = (double) ((int32_t) (message_bytes[38] + (message_bytes[39] << 8) + (message_bytes[40] << 16) + (message_bytes[41] << 24))) * (LUT_NEG_POWERS_OF_TWO[27] * 0.3048);
+    message_a2->delta_velocity_x_msec       = (double) ((int32_t) (message_bytes[30] + (message_bytes[31] << 8) + (message_bytes[32] << 16) + (message_bytes[33] << 24))) * (LUT_NEG_POWERS_OF_TWO[27] * 0.3048);
+    message_a2->delta_velocity_y_msec       = (double) ((int32_t) (message_bytes[34] + (message_bytes[35] << 8) + (message_bytes[36] << 16) + (message_bytes[37] << 24))) * (LUT_NEG_POWERS_OF_TWO[27] * 0.3048);
+    message_a2->delta_velocity_z_msec       = (double) ((int32_t) (message_bytes[38] + (message_bytes[39] << 8) + (message_bytes[40] << 16) + (message_bytes[41] << 24))) * (LUT_NEG_POWERS_OF_TWO[27] * 0.3048);
 
 
     message_a2->checksum = message_bytes[42] + (message_bytes[43] << 8);
@@ -295,12 +295,12 @@ uint8_t ProcessHGuidei300(HGuideIMU_t *imu, RingBuffer_t *data)
             MessageA1_t *control_message = &_control_message;
             DeserializeMessageA1(data, control_message);
 
-            imu->angular_rate_x         = control_message->angular_rate_x;
-            imu->angular_rate_y         = control_message->angular_rate_y;
-            imu->angular_rate_z         = control_message->angular_rate_z;
-            imu->linear_acceleration_x  = control_message->linear_acceleration_x;
-            imu->linear_acceleration_y  = control_message->linear_acceleration_y;
-            imu->linear_acceleration_z  = control_message->linear_acceleration_z;
+            imu->angular_rate_x_rad_per_sec         = control_message->angular_rate_x_rad_per_sec;
+            imu->angular_rate_y_rad_per_sec         = control_message->angular_rate_y_rad_per_sec;
+            imu->angular_rate_z_rad_per_sec         = control_message->angular_rate_z_rad_per_sec;
+            imu->linear_acceleration_x_msec2        = control_message->linear_acceleration_x_msec2;
+            imu->linear_acceleration_y_msec2        = control_message->linear_acceleration_y_msec2;
+            imu->linear_acceleration_z_msec2        = control_message->linear_acceleration_z_msec2;
         }
 
         else if (data->buffer[data->tail] == 0x0E && data->buffer[data->tail + 1] == 0xA2)
@@ -309,18 +309,18 @@ uint8_t ProcessHGuidei300(HGuideIMU_t *imu, RingBuffer_t *data)
             MessageA2_t *inertial_message = &_inertial_message;
             DeserializeMessageA2(data, inertial_message);
 
-            imu->angular_rate_x         = inertial_message->angular_rate_x;
-            imu->angular_rate_y         = inertial_message->angular_rate_y;
-            imu->angular_rate_z         = inertial_message->angular_rate_z;
-            imu->linear_acceleration_x  = inertial_message->linear_acceleration_x;
-            imu->linear_acceleration_y  = inertial_message->linear_acceleration_y;
-            imu->linear_acceleration_z  = inertial_message->linear_acceleration_z;
-            imu->delta_angle_x          = inertial_message->delta_angle_x;
-            imu->delta_angle_y          = inertial_message->delta_angle_y;
-            imu->delta_angle_z          = inertial_message->delta_angle_z;
-            imu->delta_velocity_x       = inertial_message->delta_velocity_x;
-            imu->delta_velocity_y       = inertial_message->delta_velocity_y;
-            imu->delta_velocity_z       = inertial_message->delta_velocity_z;
+            imu->angular_rate_x_rad_per_sec         = inertial_message->angular_rate_x_rad_per_sec;
+            imu->angular_rate_y_rad_per_sec         = inertial_message->angular_rate_y_rad_per_sec;
+            imu->angular_rate_z_rad_per_sec         = inertial_message->angular_rate_z_rad_per_sec;
+            imu->linear_acceleration_x_msec2        = inertial_message->linear_acceleration_x_msec2;
+            imu->linear_acceleration_y_msec2        = inertial_message->linear_acceleration_y_msec2;
+            imu->linear_acceleration_z_msec2        = inertial_message->linear_acceleration_z_msec2;
+            imu->delta_angle_x_rad                  = inertial_message->delta_angle_x_rad;
+            imu->delta_angle_y_rad                  = inertial_message->delta_angle_y_rad;
+            imu->delta_angle_z_rad                  = inertial_message->delta_angle_z_rad;
+            imu->delta_velocity_x_msec              = inertial_message->delta_velocity_x_msec;
+            imu->delta_velocity_y_msec              = inertial_message->delta_velocity_y_msec;
+            imu->delta_velocity_z_msec              = inertial_message->delta_velocity_z_msec;
         }
 
         else
@@ -332,63 +332,63 @@ uint8_t ProcessHGuidei300(HGuideIMU_t *imu, RingBuffer_t *data)
     return 0;
 }
 
-double  GetAngularRateX(HGuideIMU_t *imu)
+double  GetAngularRateXRadPerSec(HGuideIMU_t *imu)
 {
-    return imu->angular_rate_x;
+    return imu->angular_rate_x_rad_per_sec;
 }
 
-double  GetAngularRateY(HGuideIMU_t *imu)
+double  GetAngularRateYRadPerSec(HGuideIMU_t *imu)
 {
-    return imu->angular_rate_y;
+    return imu->angular_rate_y_rad_per_sec;
 }
 
-double  GetAngularRateZ(HGuideIMU_t *imu)
+double  GetAngularRateZRadPerSec(HGuideIMU_t *imu)
 {
-    return imu->angular_rate_z;
+    return imu->angular_rate_z_rad_per_sec;
 }
 
-double  GetLinearAccelerationX(HGuideIMU_t *imu)
+double  GetLinearAccelerationXMsec2(HGuideIMU_t *imu)
 {
-    return imu->linear_acceleration_x;
+    return imu->linear_acceleration_x_msec2;
 }
 
-double  GetLinearAccelerationY(HGuideIMU_t *imu)
+double  GetLinearAccelerationYMsec2(HGuideIMU_t *imu)
 {
-    return imu->linear_acceleration_y;
+    return imu->linear_acceleration_y_msec2;
 }
 
-double  GetLinearAccelerationZ(HGuideIMU_t *imu)
+double  GetLinearAccelerationZMsec2(HGuideIMU_t *imu)
 {
-    return imu->linear_acceleration_z;
+    return imu->linear_acceleration_z_msec2;
 }
 
-double  GetDeltaAngleX(HGuideIMU_t *imu)
+double  GetDeltaAngleXRad(HGuideIMU_t *imu)
 {
-    return imu->delta_angle_x;
+    return imu->delta_angle_x_rad;
 }
 
-double  GetDeltaAngleY(HGuideIMU_t *imu)
+double  GetDeltaAngleYRad(HGuideIMU_t *imu)
 {
-    return imu->delta_angle_y;
+    return imu->delta_angle_y_rad;
 }
 
-double  GetDeltaAngleZ(HGuideIMU_t *imu)
+double  GetDeltaAngleZRad(HGuideIMU_t *imu)
 {
-    return imu->delta_angle_z;
+    return imu->delta_angle_z_rad;
 }
 
-double  GetDeltaVelocityX(HGuideIMU_t *imu)
+double  GetDeltaVelocityXMsec(HGuideIMU_t *imu)
 {
-    return imu->delta_velocity_x;
+    return imu->delta_velocity_x_msec;
 }
 
-double  GetDeltaVelocityY(HGuideIMU_t *imu)
+double  GetDeltaVelocityYMsec(HGuideIMU_t *imu)
 {
-    return imu->delta_velocity_y;
+    return imu->delta_velocity_y_msec;
 }
 
-double  GetDeltaVelocityZ(HGuideIMU_t *imu)
+double  GetDeltaVelocityZMsec(HGuideIMU_t *imu)
 {
-    return imu->delta_velocity_z;
+    return imu->delta_velocity_z_msec;
 }
 
