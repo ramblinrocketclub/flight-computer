@@ -3,6 +3,8 @@
 #include "rocket.h"
 #include "util.h"
 
+#include "event_constants.h"
+
 void init_rocket(Rocket *rkt, double timestamp, GPS_t *gpsData) {
     double msec2_per_microg = 1.0 / 101971.62129779282;
 
@@ -93,7 +95,27 @@ void update_rocket_state_variables(Rocket *rkt, double currentTimeS, HGuideIMU_t
         rkt->kf.Q.pData[2] = (dt * dt * dt) / 2.0 * accelVar;
         rkt->kf.Q.pData[3] = dt * dt * accelVar;
 
+        double wx = GetAngularRateXRadPerSec(hguideData);
+        double wy = GetAngularRateYRadPerSec(hguideData);
+        double wz = GetAngularRateZRadPerSec(hguideData);
 
+        // Update orientation
+        rkt->hguide_local_orientation = update_local_orientation(&rkt->hguide_local_orientation, wx, wy, wz, dt);
+
+        get_world_rotation_matrix(&rkt->hguide_local_to_world_3x3, &rkt->hguide_local_orientation, &rkt->hguide_world_orientation_3x3);
+
+        // Transform linear accelerations
+        rkt->hguide_axyz_local_f32[0] = GetLinearAccelerationXMsec2(hguideData);
+        rkt->hguide_axyz_local_f32[1] = GetLinearAccelerationYMsec2(hguideData);
+        rkt->hguide_axyz_local_f32[2] = GetLinearAccelerationZMsec2(hguideData);
+
+        ARM_CHECK_STATUS(arm_mat_mult_f32(&rkt->hguide_world_orientation_3x3, &rkt->hguide_axyz_local, &rkt->hguide_axyz_world));
+
+        rkt->fsv.vertical_acceleration_msec2 = rkt->hguide_axyz_world_f32[2] - GRAVITY_CONSTANT_MSEC2;
+
+        float32_t un_f32[1] = { (float32_t)(rkt->fsv.vertical_acceleration_msec2) };
+
+        ARM_CHECK_STATUS(predict_kalman_filter(&rkt->kf, un_f32));
 
         rkt->fsv.last_predict_time_seconds = currentTimeS;
     }
