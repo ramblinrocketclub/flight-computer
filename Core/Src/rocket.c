@@ -119,5 +119,15 @@ void update_rocket_state_variables(Rocket *rkt, double currentTimeS, HGuideIMU_t
 
         rkt->fsv.last_predict_time_seconds = currentTimeS;
     }
+
+    if (gpsData != NULL) {
+        float32_t zn_f32[1] = { (float32_t)(gpsData->altitude_meters - rkt->startingLaunchAltitude) };
+        float32_t H_f32[2] = { 1, 0 }; // Position factor, velocity factor
+
+        // TODO: eventually read the actual standard deviation from the GPS statistics frame
+        float32_t measurementStdDevs[1] = { (float32_t)(rkt->gps_altitude_std_m) };
+
+        ARM_CHECK_STATUS(correct_kalman_filter(&rkt->kf, 1, zn_f32, H_f32, measurementStdDevs));
+    }
 }
 
