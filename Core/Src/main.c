@@ -68,8 +68,6 @@ void HGuideIMUProcessingTask(void *parameters)
         RingBuffer_Put(&hguide_imu_data, (uint8_t *) uart7_rx_data, SIZE(uart7_rx_data));
         ProcessHGuidei300(&hguide_imu, &hguide_imu_data);
 
-        RTC_GetTime(&rtc_time);
-
         double current_timestamp = RTC_GetTimestamp(&rtc_time);
 
         // New IMU data has arrived
@@ -139,8 +137,6 @@ int main(void)
     gps.altitude_meters = 0;
 
     // Init rocket
-    RTC_GetTime(&rtc_time);
-
     initialize_timestamp = RTC_GetTimestamp(&rtc_time);
 
     init_rocket(&rocket, initialize_timestamp, &gps);

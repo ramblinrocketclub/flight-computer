@@ -44,5 +44,6 @@ void RTC_GetDate(RTC_Date_t *pDate)
 }
 
 double RTC_GetTimestamp(RTC_Time_t *pTime) {
-    return pTime->hours * 3600.0 + pTime->minutes * 60.0 + pTime->seconds + pTime->subseconds;
+    RTC_GetTime(pTime);
+    return pTime->hours * 3600.0 + pTime->minutes * 60.0 + pTime->seconds + ((double)pTime->subseconds / 1000.0);
 }
