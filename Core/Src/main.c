@@ -57,8 +57,6 @@ void HGuideIMUProcessingTask(void *parameters)
     RingBuffer_t hguide_imu_data;
     RingBuffer_Init(&hguide_imu_data, empty_hguide_imu_data, SIZE(empty_hguide_imu_data));
 
-    bool hasCalibrated = false;
-
     for (;;)
     {
         vTaskSuspend(NULL);
@@ -71,11 +69,10 @@ void HGuideIMUProcessingTask(void *parameters)
         double current_timestamp = RTC_GetTimestamp(&rtc_time);
 
         // New IMU data has arrived
-        if (!hasCalibrated) {
+        if (!rocket->has_calibrated) {
             // If it has been more than 0.5 seconds since initialization, calibrate IMU
             if (current_timestamp - initialize_timestamp > 0.5) {
                 calibrate_rocket(&rocket, &hguide_imu);
-                hasCalibrated = true;
 
                 sprintf((char *) usart3_tx_data, "Finished calibrating\n");
                 USART3_DMA1_Stream3_Write((uint8_t *) usart3_tx_data, strlen((char *) usart3_tx_data));

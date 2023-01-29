@@ -52,6 +52,8 @@ typedef struct Rocket {
 
     // The altitude at which the rocket starts at
     double starting_launch_altitude_meters;
+
+    bool has_calibrated;
 } Rocket;
 
 // Initialize rocket properties

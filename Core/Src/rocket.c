@@ -56,6 +56,8 @@ void init_rocket(Rocket *rkt, double timestamp, GPS_t *gpsData) {
                                 &rkt->F_f32[0], &rkt->G_f32[0],
                                 &rkt->P_f32[0], &rkt->Q_f32[0],
                                 &rkt->xHat_f32[0], &state_std_devs_f32[0]));
+
+    rkt->has_calibrated = false;
 }
 
 void calibrate_rocket(Rocket *rkt, HGuideIMU_t *hguideData) {
@@ -75,6 +77,8 @@ void calibrate_rocket(Rocket *rkt, HGuideIMU_t *hguideData) {
 
     arm_mat_init_f32(&rkt->hguide_axyz_local, 3, 1, rkt->hguide_axyz_local_f32);
     arm_mat_init_f32(&rkt->hguide_axyz_world, 3, 1, rkt->hguide_axyz_world_f32);
+
+    rkt->has_calibrated = true;
 }
 
 void update_rocket_state_variables(Rocket *rkt, double currentTimeS, HGuideIMU_t *hguideData, GPS_t *gpsData) {
