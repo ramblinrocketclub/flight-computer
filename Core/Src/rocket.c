@@ -42,6 +42,8 @@ void init_rocket(Rocket *rkt, double timestamp, GPS_t *gpsData) {
     rkt->fsv.vertical_position_m = 0.0;
     rkt->fsv.tilt_radians = 0.0;
 
+    rkt->starting_launch_altitude_meters = gpsData->altitude_meters;
+
     double accelVar = rkt->hguide_vertical_accel_std_msec2 * rkt->hguide_vertical_accel_std_msec2;
 
     float32_t state_std_devs_f32[2] = {
@@ -121,7 +123,7 @@ void update_rocket_state_variables(Rocket *rkt, double currentTimeS, HGuideIMU_t
     }
 
     if (gpsData != NULL) {
-        float32_t zn_f32[1] = { (float32_t)(gpsData->altitude_meters - rkt->startingLaunchAltitude) };
+        float32_t zn_f32[1] = { (float32_t)(gpsData->altitude_meters - rkt->starting_launch_altitude_meters) };
         float32_t H_f32[2] = { 1, 0 }; // Position factor, velocity factor
 
         // TODO: eventually read the actual standard deviation from the GPS statistics frame

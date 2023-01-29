@@ -20,6 +20,7 @@ typedef struct
 void RTC_Init(void);
 void RTC_GetTime(RTC_Time_t *pTime);
 void RTC_GetDate(RTC_Date_t *pDate);
+double RTC_GetTimestamp(RTC_Time_t *pTime);
 
 #endif /* RTC_H */
 

@@ -51,7 +51,7 @@ typedef struct Rocket {
     double gps_altitude_std_m;               // meters
 
     // The altitude at which the rocket starts at
-    double startingLaunchAltitude;
+    double starting_launch_altitude_meters;
 } Rocket;
 
 // Initialize rocket properties

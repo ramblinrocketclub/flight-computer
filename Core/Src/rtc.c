@@ -43,3 +43,6 @@ void RTC_GetDate(RTC_Date_t *pDate)
     pDate->weekday  = ConvertBCDToBinary((uint8_t) ((RTC->DR & RTC_DR_WDU) >> RTC_DR_WDU_Pos));
 }
 
+double RTC_GetTimestamp(RTC_Time_t *pTime) {
+    return pTime->hours * 3600.0 + pTime->minutes * 60.0 + pTime->seconds + pTime->subseconds;
+}
