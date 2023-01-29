@@ -172,7 +172,7 @@ void UART_Init(void)
     RCC->APB1LENR |= RCC_APB1LENR_UART8EN;                          // Enable UART8 clock
     RCC->APB1LENR |= RCC_APB1LENR_UART7EN;                          // Enable UART7 clock
 
-    USART3->BRR = 0x0010;                                           // Set baud rate to 4MBd
+    USART3->BRR = 0x1A0B;                                           // Set baud rate to 4MBd
     USART3->CR1 = 0;                                                // Reset CR1 register
     USART3->CR3 |= (USART_CR3_DMAT) | (USART_CR3_DMAR);             // Enable DMA transmit and receive
     USART3->CR1 |= (USART_CR1_TE | USART_CR1_RE | USART_CR1_UE);    // Enable uart with transmit and receive
