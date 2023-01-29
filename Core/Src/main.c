@@ -80,7 +80,7 @@ void HGuideIMUProcessingTask(void *parameters)
         } else {
             update_rocket_state_variables(&rocket, current_timestamp, &hguide_imu, NULL);
 
-            sprintf((char *) usart3_tx_data, "Altitude (m): %f\n", rocket.xHat_f32[0]);
+            sprintf((char *) usart3_tx_data, "Height (m): %f\n", rocket.xHat_f32[0]);
             USART3_DMA1_Stream3_Write((uint8_t *) usart3_tx_data, strlen((char *) usart3_tx_data));
         }
 
