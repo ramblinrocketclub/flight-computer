@@ -6,7 +6,7 @@ typedef struct
     uint8_t hours;
     uint8_t minutes;
     uint8_t seconds;
-    uint8_t subseconds;
+    uint16_t subseconds;
 } RTC_Time_t;
 
 typedef struct
