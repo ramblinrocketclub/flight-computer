@@ -56,6 +56,9 @@ typedef struct Rocket {
     // The time at which launch begins (-1 if launch has not started yet)
     double start_launch_timestamp_sec;
 
+    // Time at which the booster motor burns out (-1 if hasn't occurred yet)
+    double booster_burnout_time_sec;
+
     bool has_calibrated;
 } Rocket;
 

@@ -22,5 +22,9 @@ typedef struct FlightStateVariables {
 } FlightStateVariables;
 
 void init_flight_state_variables(FlightStateVariables *fsv);
+double get_vertical_accel_msec2(FlightStateVariables *fsv);
+double get_vertical_vel_msec(FlightStateVariables *fsv);
+double get_vertical_pos_m(FlightStateVariables *fsv);
+double get_tilt_radians(FlightStateVariables *fsv);
 
 #endif /* FLIGHT_STATE_VARIABLES_H */

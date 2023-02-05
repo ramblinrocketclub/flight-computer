@@ -5,7 +5,7 @@
 #include <stddef.h>
 
 #include "state_machine.h"
-#include "flight_state_variables.h"
+#include "rocket.h"
 #include "event_constants.h"
 #include "printf.h"
 
@@ -32,7 +32,7 @@ extern State landed;
 
 extern StateMachine flight_state_machine;
 
-extern FlightStateVariables state_variables;
+extern Rocket rocket;
 
 void init_flight_state_machine();
 
