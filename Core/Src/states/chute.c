@@ -1,6 +1,6 @@
-#include "states/chute.h"
+#include "chute.h"
 
-#include "states/states.h"
+#include "states.h"
 
 void chute_initialize() {
 

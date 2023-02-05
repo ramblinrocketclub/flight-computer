@@ -1,6 +1,6 @@
-#include "states/fast2.h"
+#include "fast2.h"
 
-#include "states/states.h"
+#include "states.h"
 
 void fast2_initialize() {
 

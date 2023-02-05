@@ -8,7 +8,7 @@
 typedef struct KalmanFilter {
     uint16_t numStates;
     uint16_t numInputs;
-    
+
     // System matrices
     arm_matrix_instance_f32 F;
     arm_matrix_instance_f32 G;
@@ -21,15 +21,16 @@ typedef struct KalmanFilter {
     arm_matrix_instance_f32 xHat;
 } KalmanFilter;
 
-arm_status init_kalman_filter(KalmanFilter *kf, uint16_t numStates, uint16_t numInputs, 
-                        float32_t *F_f32, float32_t *G_f32, float32_t *initialP, 
+arm_status init_kalman_filter(KalmanFilter *kf, uint16_t numStates, uint16_t numInputs,
+                        float32_t *F_f32, float32_t *G_f32, float32_t *initialP,
                         float32_t *Q_f32, float32_t *initialXHat, float32_t *stateStdDevs);
 
 arm_status predict_kalman_filter(KalmanFilter *kf, float32_t *un_f32);
 
-arm_status correct_kalman_filter(KalmanFilter *kf, uint16_t numMeasuredStates, float32_t *zn_f32, 
+arm_status correct_kalman_filter(KalmanFilter *kf, uint16_t numMeasuredStates, float32_t *zn_f32,
                         float32_t *H_f32, float32_t *measurementStdDevs);
 
 void print_matrix(arm_matrix_instance_f32 *A, const char *name);
 
 #endif /* KALMAN_FILTER_H */
+

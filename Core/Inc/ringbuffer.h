@@ -1,38 +1,18 @@
-/**
-  ******************************************************************************
-  * @file    ringbuffer.h
-  * @brief   This file contains the rinbuffer struct and functions.
-  ******************************************************************************
-  */
-
 #ifndef RINGBUFFER_H
 #define RINGBUFFER_H
 
-typedef struct ringbuf {
-    volatile uint8_t *buf;
-    uint32_t size;
-    uint32_t end;
-    uint32_t start;
-} ringbuf_t;
+typedef struct
+{
+    uint8_t *buffer;
+    size_t   size;
+    size_t   head;
+    size_t   tail;
+    size_t   count;
+} RingBuffer_t;
 
-uint8_t ringbuf_init(ringbuf_t *ringbuf, uint8_t *buf_data, size_t size);
-
-/**
- * @brief Inserts an element into a specified ring buffer
- *
- * @param ringbuf   a pointer to a ring buffer
- * @param data      byte to be inserted into the ring buffer
- */
-
-void    ringbuf_put(ringbuf_t *ringbuf, uint8_t data);
-
-/**
- * @brief Gets the current element pointed to by the read pointer
- *
- * @param ringbuf   a pointer to a ring buffer
- */
-
-uint8_t ringbuf_get(ringbuf_t *ringbuf);
+uint8_t RingBuffer_Init(RingBuffer_t *pRingBuffer, uint8_t *pBuffer, size_t buffer_size);
+uint8_t RingBuffer_Put(RingBuffer_t *pRingBuffer, uint8_t *pData, size_t data_size);
+uint8_t RingBuffer_Get(RingBuffer_t *pRingBuffer, uint8_t *pData, size_t data_size);
 
 #endif /* RINGBUFFER_H */
 

@@ -3,7 +3,6 @@
 
 #include <stdbool.h>
 #include "ringbuffer.h"
-#include "ringbuffer_new.h"
 
 typedef enum
 {
@@ -69,12 +68,12 @@ typedef struct
 {
     uint8_t                         sync_byte;
     uint8_t                         message_id;
-    double                          angular_rate_x;
-    double                          angular_rate_y;
-    double                          angular_rate_z;
-    double                          linear_acceleration_x;
-    double                          linear_acceleration_y;
-    double                          linear_acceleration_z;
+    double                          angular_rate_x_rad_per_sec;
+    double                          angular_rate_y_rad_per_sec;
+    double                          angular_rate_z_rad_per_sec;
+    double                          linear_acceleration_x_msec2;
+    double                          linear_acceleration_y_msec2;
+    double                          linear_acceleration_z_msec2;
     HGuideIMUStatusWord1_t          status_word_1;
     HGuideIMUMultiplexStatusWord2_t multiplexed_status_word_2;
     uint16_t                        checksum;
@@ -84,55 +83,53 @@ typedef struct
 {
     uint8_t                         sync_byte;
     uint8_t                         message_id;
-    double                          angular_rate_x;
-    double                          angular_rate_y;
-    double                          angular_rate_z;
-    double                          linear_acceleration_x;
-    double                          linear_acceleration_y;
-    double                          linear_acceleration_z;
+    double                          angular_rate_x_rad_per_sec;
+    double                          angular_rate_y_rad_per_sec;
+    double                          angular_rate_z_rad_per_sec;
+    double                          linear_acceleration_x_msec2;
+    double                          linear_acceleration_y_msec2;
+    double                          linear_acceleration_z_msec2;
     HGuideIMUStatusWord1_t          status_word_1;
     HGuideIMUMultiplexStatusWord2_t multiplexed_status_word_2;
-    double                          delta_angle_x;
-    double                          delta_angle_y;
-    double                          delta_angle_z;
-    double                          delta_velocity_x;
-    double                          delta_velocity_y;
-    double                          delta_velocity_z;
+    double                          delta_angle_x_rad;
+    double                          delta_angle_y_rad;
+    double                          delta_angle_z_rad;
+    double                          delta_velocity_x_msec;
+    double                          delta_velocity_y_msec;
+    double                          delta_velocity_z_msec;
     uint16_t                        checksum;
 } MessageA2_t;
 
 typedef struct
 {
-    double angular_rate_x;
-    double angular_rate_y;
-    double angular_rate_z;
-    double linear_acceleration_x;
-    double linear_acceleration_y;
-    double linear_acceleration_z;
-    double delta_angle_x;
-    double delta_angle_y;
-    double delta_angle_z;
-    double delta_velocity_x;
-    double delta_velocity_y;
-    double delta_velocity_z;
-} HGuidei300Imu_t;
+    double angular_rate_x_rad_per_sec;
+    double angular_rate_y_rad_per_sec;
+    double angular_rate_z_rad_per_sec;
+    double linear_acceleration_x_msec2;
+    double linear_acceleration_y_msec2;
+    double linear_acceleration_z_msec2;
+    double delta_angle_x_rad;
+    double delta_angle_y_rad;
+    double delta_angle_z_rad;
+    double delta_velocity_x_msec;
+    double delta_velocity_y_msec;
+    double delta_velocity_z_msec;
+} HGuideIMU_t;
 
-//uint8_t ProcessHGuidei300(HGuidei300Imu_t *imu, ringbuf_t *data);
-uint8_t ProcessHGuidei300(HGuidei300Imu_t *imu, RingBuffer_t *data);
-double  GetAngularRateX(HGuidei300Imu_t *imu);
-double  GetAngularRateY(HGuidei300Imu_t *imu);
-double  GetAngularRateZ(HGuidei300Imu_t *imu);
-double  GetLinearAccelerationX(HGuidei300Imu_t *imu);
-double  GetLinearAccelerationY(HGuidei300Imu_t *imu);
-double  GetLinearAccelerationZ(HGuidei300Imu_t *imu);
-double  GetDeltaAngleX(HGuidei300Imu_t *imu);
-double  GetDeltaAngleY(HGuidei300Imu_t *imu);
-double  GetDeltaAngleZ(HGuidei300Imu_t *imu);
-double  GetDeltaVelocityX(HGuidei300Imu_t *imu);
-double  GetDeltaVelocityY(HGuidei300Imu_t *imu);
-double  GetDeltaVelocityZ(HGuidei300Imu_t *imu);
+uint8_t ProcessHGuidei300(HGuideIMU_t *imu, RingBuffer_t *data);
 
-
+double  GetAngularRateXRadPerSec(HGuideIMU_t *imu);
+double  GetAngularRateYRadPerSec(HGuideIMU_t *imu);
+double  GetAngularRateZRadPerSec(HGuideIMU_t *imu);
+double  GetLinearAccelerationXMsec2(HGuideIMU_t *imu);
+double  GetLinearAccelerationYMsec2(HGuideIMU_t *imu);
+double  GetLinearAccelerationZMsec2(HGuideIMU_t *imu);
+double  GetDeltaAngleXRad(HGuideIMU_t *imu);
+double  GetDeltaAngleYRad(HGuideIMU_t *imu);
+double  GetDeltaAngleZRad(HGuideIMU_t *imu);
+double  GetDeltaVelocityXMsec(HGuideIMU_t *imu);
+double  GetDeltaVelocityYMsec(HGuideIMU_t *imu);
+double  GetDeltaVelocityZMsec(HGuideIMU_t *imu);
 
 #endif /* HGUIDE_IMU_H */
 

@@ -1,6 +1,6 @@
-#include "states/safe.h"
+#include "safe.h"
 
-#include "states/states.h"
+#include "states.h"
 
 void safe_initialize() {
 

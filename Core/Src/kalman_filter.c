@@ -1,8 +1,8 @@
 #include "kalman_filter.h"
 #include "printf.h"
 
-arm_status init_kalman_filter(KalmanFilter *kf, uint16_t numStates, uint16_t numInputs, 
-                        float32_t *F_f32, float32_t *G_f32, float32_t *initialP, 
+arm_status init_kalman_filter(KalmanFilter *kf, uint16_t numStates, uint16_t numInputs,
+                        float32_t *F_f32, float32_t *G_f32, float32_t *initialP,
                         float32_t *Q_f32, float32_t *initialXHat, float32_t *stateStdDevs) {
     arm_status result = ARM_MATH_SUCCESS;
 
@@ -69,10 +69,10 @@ arm_status predict_kalman_filter(KalmanFilter *kf, float32_t *un_f32) {
     return result;
 }
 
-arm_status correct_kalman_filter(KalmanFilter *kf, uint16_t numMeasuredStates, float32_t *zn_f32, 
+arm_status correct_kalman_filter(KalmanFilter *kf, uint16_t numMeasuredStates, float32_t *zn_f32,
                         float32_t *H_f32, float32_t *measurementStdDevs) {
     arm_status result = ARM_MATH_SUCCESS;
-    
+
     float32_t HT_f32[kf->numStates * numMeasuredStates];
     float32_t vnT_f32[numMeasuredStates];
     float32_t Rn_f32[numMeasuredStates * numMeasuredStates];
@@ -130,7 +130,7 @@ arm_status correct_kalman_filter(KalmanFilter *kf, uint16_t numMeasuredStates, f
 
     arm_matrix_instance_f32 KR; // nx * nz
     arm_matrix_instance_f32 KRKT; // nx * nx
- 
+
     arm_mat_init_f32(&H, numMeasuredStates, kf->numStates, H_f32);
     arm_mat_init_f32(&HT, kf->numStates, numMeasuredStates, HT_f32);
     arm_mat_init_f32(&zn, numMeasuredStates, 1, zn_f32);
@@ -139,7 +139,7 @@ arm_status correct_kalman_filter(KalmanFilter *kf, uint16_t numMeasuredStates, f
     arm_mat_init_f32(&Rn, numMeasuredStates, numMeasuredStates, Rn_f32);
     arm_mat_init_f32(&K, kf->numStates, numMeasuredStates, K_f32);
     arm_mat_init_f32(&KT, numMeasuredStates, kf->numStates, KT_f32);
-    
+
     arm_mat_init_f32(&PHT, kf->numStates, numMeasuredStates, PHT_f32);
     arm_mat_init_f32(&HPHT, numMeasuredStates, numMeasuredStates, HPHT_f32);
     arm_mat_init_f32(&HPHTRn, numMeasuredStates, numMeasuredStates, HPHTRn_f32);
@@ -257,3 +257,4 @@ void print_matrix(arm_matrix_instance_f32 *A, const char *name) {
 
 	printf("]\n");
 }
+

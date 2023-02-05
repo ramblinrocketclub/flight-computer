@@ -1,13 +1,13 @@
-#include "states/post_stage.h"
+#include "post_stage.h"
 
-#include "states/states.h"
+#include "states.h"
 
 void post_stage_initialize() {
 
 }
 
 State *post_stage_execute() {
-    return &postStage;
+    return &post_stage;
 }
 
 void post_stage_finish() {

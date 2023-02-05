@@ -1,12 +1,12 @@
-#include "states/states.h"
+#include "states.h"
 
 State safe;
 State armed;
 State boost1;
 State fast1;
-State preStage;
-State postStage;
-State sustainerIgnition;
+State pre_stage;
+State post_stage;
+State sustainer_ignition;
 State boost2;
 State fast2;
 State apogee;
@@ -14,7 +14,7 @@ State coast;
 State chute;
 State landed;
 
-StateMachine flightStateMachine;
+StateMachine flight_state_machine;
 
 extern void safe_initialize();
 extern State *safe_execute();
@@ -73,9 +73,9 @@ void init_flight_state_machine() {
     INIT_STATE(armed, armed_initialize, armed_execute, armed_finish);
     INIT_STATE(boost1, boost1_initialize, boost1_execute, boost1_finish);
     INIT_STATE(fast1, fast1_initialize, fast1_execute, fast1_finish);
-    INIT_STATE(preStage, pre_stage_initialize, pre_stage_execute, pre_stage_finish);
-    INIT_STATE(postStage, post_stage_initialize, post_stage_execute, post_stage_finish);
-    INIT_STATE(sustainerIgnition, sustainer_ignition_initialize, sustainer_ignition_execute, sustainer_ignition_finish);
+    INIT_STATE(pre_stage, pre_stage_initialize, pre_stage_execute, pre_stage_finish);
+    INIT_STATE(post_stage, post_stage_initialize, post_stage_execute, post_stage_finish);
+    INIT_STATE(sustainer_ignition, sustainer_ignition_initialize, sustainer_ignition_execute, sustainer_ignition_finish);
     INIT_STATE(boost2, boost2_initialize, boost2_execute, boost2_finish);
     INIT_STATE(fast2, fast2_initialize, fast2_execute, fast2_finish);
     INIT_STATE(apogee, apogee_initialize, apogee_execute, apogee_finish);
@@ -83,5 +83,5 @@ void init_flight_state_machine() {
     INIT_STATE(chute, chute_initialize, chute_execute, chute_finish);
     INIT_STATE(landed, landed_initialize, landed_execute, landed_finish);
 
-    init_state_machine(&flightStateMachine, &safe);
+    init_state_machine(&flight_state_machine, &safe);
 }
