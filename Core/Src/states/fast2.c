@@ -2,14 +2,14 @@
 
 #include "states.h"
 
-void fast2_initialize() {
+void fast2_initialize(double currentTimestampSec) {
 
 }
 
-State *fast2_execute() {
+State *fast2_execute(double currentTimestampSec) {
     return &fast2;
 }
 
-void fast2_finish() {
+void fast2_finish(double currentTimestampSec) {
     
 }

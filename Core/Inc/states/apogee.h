@@ -3,8 +3,8 @@
 
 #include "state_machine.h"
 
-void apogee_initialize();
-State *apogee_execute();
-void apogee_finish();
+void apogee_initialize(double currentTimestampSec);
+State *apogee_execute(double currentTimestampSec);
+void apogee_finish(double currentTimestampSec);
 
 #endif /* APOGEE_H */

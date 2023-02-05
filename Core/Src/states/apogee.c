@@ -2,14 +2,14 @@
 
 #include "states.h"
 
-void apogee_initialize() {
+void apogee_initialize(double currentTimestampSec) {
 
 }
 
-State *apogee_execute() {
+State *apogee_execute(double currentTimestampSec) {
     return &apogee;
 }
 
-void apogee_finish() {
+void apogee_finish(double currentTimestampSec) {
 
 }

@@ -16,57 +16,57 @@ State landed;
 
 StateMachine flight_state_machine;
 
-extern void safe_initialize();
-extern State *safe_execute();
-extern void safe_finish();
+extern void safe_initialize(double currentTimestampSec);
+extern State *safe_execute(double currentTimestampSec);
+extern void safe_finish(double currentTimestampSec);
 
-extern void armed_initialize();
-extern State *armed_execute();
-extern void armed_finish();
+extern void armed_initialize(double currentTimestampSec);
+extern State *armed_execute(double currentTimestampSec);
+extern void armed_finish(double currentTimestampSec);
 
-extern void boost1_initialize();
-extern State *boost1_execute();
-extern void boost1_finish();
+extern void boost1_initialize(double currentTimestampSec);
+extern State *boost1_execute(double currentTimestampSec);
+extern void boost1_finish(double currentTimestampSec);
 
-extern void fast1_initialize();
-extern State *fast1_execute();
-extern void fast1_finish();
+extern void fast1_initialize(double currentTimestampSec);
+extern State *fast1_execute(double currentTimestampSec);
+extern void fast1_finish(double currentTimestampSec);
 
-extern void pre_stage_initialize();
-extern State *pre_stage_execute();
-extern void pre_stage_finish();
+extern void pre_stage_initialize(double currentTimestampSec);
+extern State *pre_stage_execute(double currentTimestampSec);
+extern void pre_stage_finish(double currentTimestampSec);
 
-extern void post_stage_initialize();
-extern State *post_stage_execute();
-extern void post_stage_finish();
+extern void post_stage_initialize(double currentTimestampSec);
+extern State *post_stage_execute(double currentTimestampSec);
+extern void post_stage_finish(double currentTimestampSec);
 
-extern void sustainer_ignition_initialize();
-extern State *sustainer_ignition_execute();
-extern void sustainer_ignition_finish();
+extern void sustainer_ignition_initialize(double currentTimestampSec);
+extern State *sustainer_ignition_execute(double currentTimestampSec);
+extern void sustainer_ignition_finish(double currentTimestampSec);
 
-extern void boost2_initialize();
-extern State *boost2_execute();
-extern void boost2_finish();
+extern void boost2_initialize(double currentTimestampSec);
+extern State *boost2_execute(double currentTimestampSec);
+extern void boost2_finish(double currentTimestampSec);
 
-extern void fast2_initialize();
-extern State *fast2_execute();
-extern void fast2_finish();
+extern void fast2_initialize(double currentTimestampSec);
+extern State *fast2_execute(double currentTimestampSec);
+extern void fast2_finish(double currentTimestampSec);
 
-extern void apogee_initialize();
-extern State *apogee_execute();
-extern void apogee_finish();
+extern void apogee_initialize(double currentTimestampSec);
+extern State *apogee_execute(double currentTimestampSec);
+extern void apogee_finish(double currentTimestampSec);
 
-extern void coast_initialize();
-extern State *coast_execute();
-extern void coast_finish();
+extern void coast_initialize(double currentTimestampSec);
+extern State *coast_execute(double currentTimestampSec);
+extern void coast_finish(double currentTimestampSec);
 
-extern void chute_initialize();
-extern State *chute_execute();
-extern void chute_finish();
+extern void chute_initialize(double currentTimestampSec);
+extern State *chute_execute(double currentTimestampSec);
+extern void chute_finish(double currentTimestampSec);
 
-extern void landed_initialize();
-extern State *landed_execute();
-extern void landed_finish();
+extern void landed_initialize(double currentTimestampSec);
+extern State *landed_execute(double currentTimestampSec);
+extern void landed_finish(double currentTimestampSec);
 
 void init_flight_state_machine() {
     INIT_STATE(safe, safe_initialize, safe_execute, safe_finish);

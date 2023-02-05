@@ -2,14 +2,14 @@
 
 #include "states.h"
 
-void boost2_initialize() {
+void boost2_initialize(double currentTimestampSec) {
 
 }
 
-State *boost2_execute() {
+State *boost2_execute(double currentTimestampSec) {
     return &boost2;
 }
 
-void boost2_finish() {
+void boost2_finish(double currentTimestampSec) {
     
 }
