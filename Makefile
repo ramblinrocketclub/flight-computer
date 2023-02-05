@@ -45,16 +45,9 @@ Core/Src/gps.c \
 Core/Src/hguide_imu.c \
 Core/Src/printf.c \
 Core/Src/stm32h7xx_it.c \
-<<<<<<< HEAD
-Core/Src/imu_math_helper.c \
-Core/Src/kalman_filter.c \
-Core/Src/rtc.c \
-Core/Src/state_machine.c \
-=======
 Core/Src/rtc.c \
 Core/Src/state_machine.c \
 Core/Src/kalman_filter.c \
->>>>>>> imu-testing
 Core/Src/states/apogee.c \
 Core/Src/states/armed.c \
 Core/Src/states/boost1.c \
@@ -63,22 +56,16 @@ Core/Src/states/chute.c \
 Core/Src/states/coast.c \
 Core/Src/states/fast1.c \
 Core/Src/states/fast2.c \
-<<<<<<< HEAD
-=======
 Core/Src/flight_state_variables.c \
->>>>>>> imu-testing
 Core/Src/states/landed.c \
 Core/Src/states/post_stage.c \
 Core/Src/states/pre_stage.c \
 Core/Src/states/safe.c \
 Core/Src/states/states.c \
 Core/Src/states/sustainer_ignition.c \
-<<<<<<< HEAD
-=======
 Core/Src/rocket.c \
 Core/Src/imu_math_helper.c \
 Core/Src/rolling_window.c \
->>>>>>> imu-testing
 Middlewares/Third_Party/FreeRTOS/Source/croutine.c \
 Middlewares/Third_Party/FreeRTOS/Source/event_groups.c \
 Middlewares/Third_Party/FreeRTOS/Source/list.c \

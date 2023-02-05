@@ -367,27 +367,6 @@ uint8_t Is_UART7_Buffer_Full(void)
     }
 }
 
-void readRTCTimeBuffer(RTCTimeBuffer *buffer) {
-    uint32_t tmpreg;
-
-    if (buffer != NULL) {
-        buffer->subSeconds = (uint32_t)(RTC->SSR);
-        buffer->secondFraction = (uint32_t)(RTC->PRER & RTC_PRER_PREDIV_S);
-
-        tmpreg = (uint32_t)(RTC->TR & RTC_TR_RESERVED_MASK);
-
-        /* Fill the structure fields with the read parameters */
-        buffer->hours      = (uint8_t)((tmpreg & (RTC_TR_HT  | RTC_TR_HU))  >> RTC_TR_HU_Pos);
-        buffer->minutes    = (uint8_t)((tmpreg & (RTC_TR_MNT | RTC_TR_MNU)) >> RTC_TR_MNU_Pos);
-        buffer->seconds    = (uint8_t)((tmpreg & (RTC_TR_ST  | RTC_TR_SU))  >> RTC_TR_SU_Pos);
-
-         /* Convert the time structure parameters to Binary format */
-        buffer->hours   = (uint8_t)convertBCDToBinary(buffer->hours);
-        buffer->minutes = (uint8_t)convertBCDToBinary(buffer->minutes);
-        buffer->seconds = (uint8_t)convertBCDToBinary(buffer->seconds);
-    }
-}
-
 void _putchar(char character)
 {
     usart3_tx_data[0] = (uint8_t) character;
