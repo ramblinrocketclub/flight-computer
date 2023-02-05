@@ -123,6 +123,8 @@ void update_rocket_state_variables(Rocket *rkt, double currentTimestampSec, HGui
 
         add_data_point_rolling_window(&rkt->fsv.vertical_acceleration_msec2_rw, rkt->hguide_axyz_world_f32[2] - GRAVITY_CONSTANT_MSEC2);
 
+        
+
         float32_t un_f32[1] = { (float32_t)(get_vertical_accel_msec2(&rkt->fsv)) };
 
         ARM_CHECK_STATUS(predict_kalman_filter(&rkt->kf, un_f32));
