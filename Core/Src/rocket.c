@@ -7,7 +7,7 @@
 #include "states/flight_state_variables.h"
 #include "rolling_window.h"
 
-void init_rocket(Rocket *rkt, double timestamp, GPS_t *gpsData) {
+void init_rocket(Rocket *rkt, GPS_t *gpsData) {
     double msec2_per_microg = 1.0 / 101971.62129779282;
 
     // Datasheets used for the following:
@@ -40,6 +40,8 @@ void init_rocket(Rocket *rkt, double timestamp, GPS_t *gpsData) {
     init_flight_state_variables(&rkt->fsv);
 
     rkt->starting_launch_altitude_meters = gpsData->altitude_meters;
+
+    rkt->start_launch_timestamp_sec = -1;
 
     double accelVar = rkt->hguide_vertical_accel_std_msec2 * rkt->hguide_vertical_accel_std_msec2;
 
@@ -78,9 +80,13 @@ void calibrate_rocket(Rocket *rkt, HGuideIMU_t *hguideData) {
     rkt->has_calibrated = true;
 }
 
-void update_rocket_state_variables(Rocket *rkt, double currentTimeS, HGuideIMU_t *hguideData, GPS_t *gpsData) {
+void update_rocket_state_variables(Rocket *rkt, double currentTimestampSec, HGuideIMU_t *hguideData, GPS_t *gpsData) {
+    if (rkt->start_launch_timestamp_sec >= 0) {
+        rkt->fsv.time_since_launch_seconds = currentTimestampSec - rkt->start_launch_timestamp_sec;
+    }
+
     if (hguideData != NULL) {
-        double dt = currentTimeS - rkt->fsv.last_predict_time_seconds;
+        double dt = currentTimestampSec - rkt->fsv.last_predict_time_seconds;
 
         // Update matrices with new dt
         rkt->kf.F.pData[0] = 1.0f;
@@ -120,7 +126,7 @@ void update_rocket_state_variables(Rocket *rkt, double currentTimeS, HGuideIMU_t
 
         ARM_CHECK_STATUS(predict_kalman_filter(&rkt->kf, un_f32));
 
-        rkt->fsv.last_predict_time_seconds = currentTimeS;
+        rkt->fsv.last_predict_time_seconds = currentTimestampSec;
     }
 
     if (gpsData != NULL) {

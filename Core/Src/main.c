@@ -134,9 +134,7 @@ int main(void)
     gps.altitude_meters = 0;
 
     // Init rocket
-    initialize_timestamp = RTC_GetTimestamp(&rtc_time);
-
-    init_rocket(&rocket, initialize_timestamp, &gps);
+    init_rocket(&rocket, &gps);
 
     xTaskCreate(
         HGuideIMUProcessingTask,                /* Function that implements the task. */
