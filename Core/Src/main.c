@@ -28,8 +28,8 @@
 
 #define SIZE(array)         (sizeof(array) / sizeof(array[0]))
 
-__attribute__ ((section(".buffer"))) volatile uint8_t uart8_rx_data[GPS_BUFFER_SIZE];
-__attribute__ ((section(".buffer"))) volatile uint8_t uart8_tx_data[GPS_BUFFER_SIZE];
+__attribute__ ((section(".buffer"))) volatile uint8_t uart9_rx_data[GPS_BUFFER_SIZE];
+__attribute__ ((section(".buffer"))) volatile uint8_t uart9_tx_data[GPS_BUFFER_SIZE];
 __attribute__ ((section(".buffer"))) volatile uint8_t uart7_rx_data[HGUIDE_BUFFER_SIZE];
 __attribute__ ((section(".buffer"))) volatile uint8_t uart7_tx_data[HGUIDE_BUFFER_SIZE];
 __attribute__ ((section(".buffer"))) volatile uint8_t usart3_rx_data[LOG_BUFFER_SIZE];
@@ -37,8 +37,8 @@ __attribute__ ((section(".buffer"))) volatile uint8_t usart3_tx_data[LOG_BUFFER_
 
 volatile uint8_t usart3_tx_finished = 0;
 volatile uint8_t usart3_rx_finished = 0;
-volatile uint8_t uart8_tx_finished = 0;
-volatile uint8_t uart8_rx_finished = 0;
+volatile uint8_t uart9_tx_finished = 0;
+volatile uint8_t uart9_rx_finished = 0;
 volatile uint8_t uart7_tx_finished = 0;
 volatile uint8_t uart7_rx_finished = 0;
 
@@ -101,7 +101,7 @@ void GPSProcessingTask(void *parameters)
 
         taskENTER_CRITICAL();
 
-        RingBuffer_Put(&gps_data, (uint8_t *) uart8_rx_data, SIZE(uart8_rx_data));
+        RingBuffer_Put(&gps_data, (uint8_t *) uart9_rx_data, SIZE(uart9_rx_data));
         GPS_ProcessData(&gps, &gps_data);
 
 
@@ -113,8 +113,7 @@ void GPSProcessingTask(void *parameters)
 
         else
         {
-            sprintf((char *) usart3_tx_data, "Latitude: %lf N/S: %c Longitude: %lf E/W: %c",
-                    GPS_GetLatitude(&gps), GPS_GetNorthSouthIndicator(&gps), GPS_GetLongitude(&gps), GPS_GetEastWestIndicator(&gps));
+            sprintf((char *) usart3_tx_data, "Latitude: %lf N/S: %c Longitude: %lf E/W: %c", GPS_GetLatitude(&gps), GPS_GetNorthSouthIndicator(&gps), GPS_GetLongitude(&gps), GPS_GetEastWestIndicator(&gps));
             USART3_DMA1_Stream3_Write((uint8_t *) usart3_tx_data, strlen((char *) usart3_tx_data));
         }
 
@@ -152,7 +151,7 @@ int main(void)
         tskIDLE_PRIORITY,               /* Priority at which the task is created. */
         &gps_processing_task_handle);   /* Used to pass out the created task's handle. */
 
-    UART8_DMA1_Stream0_Read(uart8_rx_data, GPS_BUFFER_SIZE);
+    UART9_DMA1_Stream0_Read(uart9_rx_data, GPS_BUFFER_SIZE);
     UART7_DMA1_Stream2_Read(uart7_rx_data, HGUIDE_BUFFER_SIZE);
 
     vTaskStartScheduler();
@@ -168,15 +167,16 @@ void GPIO_Init(void)
     RCC->AHB4ENR |= RCC_AHB4ENR_GPIODEN;    // Enable GPIOD clock
     RCC->AHB4ENR |= RCC_AHB4ENR_GPIOEEN;    // Enable GPIOE clock
     RCC->AHB4ENR |= RCC_AHB4ENR_GPIOBEN;    // Enable GPIOB clock
+    RCC->AHB4ENR |= RCC_AHB4ENR_GPIOGEN;    // Enable GPIOG clock
 
     GPIOD->MODER &= ~(GPIO_MODER_MODE8);    // Reset mode of PD8
     GPIOD->MODER &= ~(GPIO_MODER_MODE9);    // Reset mode of PD9
 
-    GPIOE->MODER &= ~(GPIO_MODER_MODE0);    // Reset mode of PE0
-    GPIOE->MODER &= ~(GPIO_MODER_MODE1);    // Reset mode of PE1
-
     GPIOB->MODER &= ~(GPIO_MODER_MODE3);    // Reset mode of PB3
     GPIOB->MODER &= ~(GPIO_MODER_MODE4);    // Reset mode of PB4
+
+    GPIOG->MODER &= ~(GPIO_MODER_MODE0);
+    GPIOG->MODER &= ~(GPIO_MODER_MODE1);
 
     GPIOD->MODER |= GPIO_MODER_MODE8_1;     // Set PD8 to AF mode
     GPIOD->MODER |= GPIO_MODER_MODE9_1;     // Set PD9 to AF mode
@@ -184,14 +184,14 @@ void GPIO_Init(void)
     GPIOB->MODER |= GPIO_MODER_MODE3_1;     // set PB3 to AF mode
     GPIOB->MODER |= GPIO_MODER_MODE4_1;     // set PB4 to AF mode
 
-    GPIOE->MODER |= GPIO_MODER_MODE0_1;     // Set PE0 to AF mode
-    GPIOE->MODER |= GPIO_MODER_MODE1_1;     // Set PE1 to AF mode
+    GPIOG->MODER |= GPIO_MODER_MODE0_1;     // Set PG0 to AF mode
+    GPIOG->MODER |= GPIO_MODER_MODE1_1;     // Set PG1 to AF mode
 
     GPIOD->AFR[1] |= (AF07 << 0);           // Set PD8 to AF7 (USART3_TX)
     GPIOD->AFR[1] |= (AF07 << 4);           // Set PD9 to AF8 (USART3_RX)
 
-    GPIOE->AFR[0] |= (AF08 << 0);           // Set PE0 to AF8 (UART8_RX)
-    GPIOE->AFR[0] |= (AF08 << 4);           // Set PE1 to AF8 (UART8_TX)
+    GPIOG->AFR[0] |= (AF11 << 4 * 0);       // Set PG0 to AF11 (UART9_RX)
+    GPIOG->AFR[0] |= (AF11 << 4 * 1);       // Set PG1 to AF11 (UART9_TX)
 
     GPIOB->AFR[0] |= (AF11 << 4 * 3);       // set PB3 to AF11 (UART7_RX)
     GPIOB->AFR[0] |= (AF11 << 4 * 4);       // set PB4 to AF11 (UART7_TX)
@@ -200,18 +200,18 @@ void GPIO_Init(void)
 void UART_Init(void)
 {
     RCC->APB1LENR |= RCC_APB1LENR_USART3EN;                         // Enable USART3 clock
-    RCC->APB1LENR |= RCC_APB1LENR_UART8EN;                          // Enable UART8 clock
+    RCC->APB2ENR |= RCC_APB2ENR_UART9EN;                          // Enable uart9 clock
     RCC->APB1LENR |= RCC_APB1LENR_UART7EN;                          // Enable UART7 clock
 
-    USART3->BRR = 0x1A0B;                                           // Set baud rate to 4MBd
+    USART3->BRR = 0x0010;                                           // Set baud rate to 4MBd
     USART3->CR1 = 0;                                                // Reset CR1 register
     USART3->CR3 |= (USART_CR3_DMAT) | (USART_CR3_DMAR);             // Enable DMA transmit and receive
     USART3->CR1 |= (USART_CR1_TE | USART_CR1_RE | USART_CR1_UE);    // Enable uart with transmit and receive
 
-    UART8->BRR = 0x0683;                                            // Set baud rate to 38400 Bd
-    UART8->CR1 = 0;                                                 // Reset CR1 register
-    UART8->CR3 |= (USART_CR3_DMAT) | (USART_CR3_DMAR);              // Enable DMA transmit and receive
-    UART8->CR1 |= (USART_CR1_TE | USART_CR1_RE | USART_CR1_UE);     // Enable uart with transmit and receive
+    UART9->BRR = 0x0683;                                            // Set baud rate to 38400 Bd
+    UART9->CR1 = 0;                                                 // Reset CR1 register
+    UART9->CR3 |= (USART_CR3_DMAT) | (USART_CR3_DMAR);              // Enable DMA transmit and receive
+    UART9->CR1 |= (USART_CR1_TE | USART_CR1_RE | USART_CR1_UE);     // Enable uart with transmit and receive
 
     UART7->BRR = 0x0045;                                            // Set baud rate of 921.6 kBd
     UART7->CR1 = 0;                                                 // Reset CR1 register
@@ -257,8 +257,8 @@ void DMA_Init(void)
                         |(DMA_SxCR_TRBUFF));
 
 
-    DMA1_Stream0->PAR = (uint32_t) &UART8->RDR;
-    DMA1_Stream4->PAR = (uint32_t) &UART8->TDR;
+    DMA1_Stream0->PAR = (uint32_t) &UART9->RDR;
+    DMA1_Stream4->PAR = (uint32_t) &UART9->TDR;
 
     DMA1_Stream2->CR &= ~(DMA_SxCR_EN);
     while((DMA1_Stream2->CR & (DMA_SxCR_EN)));
@@ -305,16 +305,16 @@ void USART3_DMA1_Stream1_Read(volatile uint8_t *buffer, uint16_t length)
     DMA1_Stream1->CR |= DMA_SxCR_EN;
 }
 
-void UART8_DMA1_Stream4_Write(volatile uint8_t *data, uint16_t length)
+void UART9_DMA1_Stream4_Write(volatile uint8_t *data, uint16_t length)
 {
     DMA1_Stream4->M0AR = (uint32_t) data;
     DMA1_Stream4->NDTR = length;
     DMA1_Stream4->CR |= DMA_SxCR_EN;
-    while (uart8_tx_finished == 0);
-    uart8_tx_finished = 0;
+    while (uart9_tx_finished == 0);
+    uart9_tx_finished = 0;
 }
 
-void UART8_DMA1_Stream0_Read(volatile uint8_t *buffer, uint16_t length)
+void UART9_DMA1_Stream0_Read(volatile uint8_t *buffer, uint16_t length)
 {
     DMA1_Stream0->M0AR = (uint32_t) buffer;
     DMA1_Stream0->NDTR = length;
@@ -341,15 +341,15 @@ uint8_t Is_USART3_Buffer_Full(void)
     }
 }
 
-uint8_t Is_UART8_Buffer_Full(void)
+uint8_t Is_UART9_Buffer_Full(void)
 {
-    if (uart8_rx_finished == 0)
+    if (uart9_rx_finished == 0)
     {
         return BUFFER_EMPTY;
     }
     else
     {
-        uart8_rx_finished = 0;
+        uart9_rx_finished = 0;
         return BUFFER_FULL;
     }
 }

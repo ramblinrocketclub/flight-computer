@@ -230,7 +230,7 @@ void DMA1_Stream4_IRQHandler(void)
 {
 	if(DMA1->HISR & DMA_HISR_TCIF4)
 	{
-		uart8_tx_finished = 1;
+		uart9_tx_finished = 1;
 		DMA1->HIFCR = DMA_HIFCR_CTCIF4;
 	}
 
@@ -270,7 +270,7 @@ void DMA1_Stream0_IRQHandler(void)
 
     if(DMA1->LISR & DMA_LISR_TCIF0)
     {
-        uart8_rx_finished = 1;
+        uart9_rx_finished = 1;
         DMA1->LIFCR = DMA_LIFCR_CTCIF0;
     }
 
