@@ -1,6 +1,9 @@
 #ifndef STATES_H
 #define STATES_H
 
+#include <stdint.h>
+#include <stddef.h>
+
 #include "state_machine.h"
 #include "flight_state_variables.h"
 #include "event_constants.h"

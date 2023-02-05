@@ -69,7 +69,7 @@ void HGuideIMUProcessingTask(void *parameters)
         double current_timestamp = RTC_GetTimestamp(&rtc_time);
 
         // New IMU data has arrived
-        if (!rocket->has_calibrated) {
+        if (!rocket.has_calibrated) {
             // If it has been more than 0.5 seconds since initialization, calibrate IMU
             if (current_timestamp - initialize_timestamp > 0.5) {
                 calibrate_rocket(&rocket, &hguide_imu);

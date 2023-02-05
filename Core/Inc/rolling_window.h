@@ -6,10 +6,13 @@ typedef struct RollingWindow {
     size_t capacity;
     size_t size;
     size_t front;
+    double sum_of_elements;
 } RollingWindow;
 
 void init_rolling_window(RollingWindow *rw, double *pBackingArray, size_t capacity);
-int mod_rolling_window(int index, int modulo);
-void add_data_point(RollingWindow *rw, double dataPoint);
+void add_data_point_rolling_window(RollingWindow *rw, double dataPoint);
+double get_datapoint_at_index_rolling_window(RollingWindow *rw, size_t index);
+double get_latest_datapoint_rolling_window(RollingWindow *rw);
+double get_earliest_datapoint_rolling_window(RollingWindow *rw);
 
 #endif /* ROLLING_WINDOW_H */
