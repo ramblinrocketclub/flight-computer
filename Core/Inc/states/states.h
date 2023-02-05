@@ -1,9 +1,13 @@
 #ifndef STATES_H
 #define STATES_H
 
+#include <stdint.h>
+#include <stddef.h>
+
 #include "state_machine.h"
-#include "flight_state_variables.h"
+#include "rocket.h"
 #include "event_constants.h"
+#include "printf.h"
 
 #define INIT_STATE(state, init_fn, execute_fn, finish_fn) { \
                             state.initPtr = &init_fn;       \
@@ -28,7 +32,7 @@ extern State landed;
 
 extern StateMachine flight_state_machine;
 
-extern FlightStateVariables state_variables;
+extern Rocket rocket;
 
 void init_flight_state_machine();
 

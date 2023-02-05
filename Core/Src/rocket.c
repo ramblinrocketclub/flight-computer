@@ -4,8 +4,10 @@
 #include "util.h"
 
 #include "event_constants.h"
+#include "states/flight_state_variables.h"
+#include "rolling_window.h"
 
-void init_rocket(Rocket *rkt, double timestamp, GPS_t *gpsData) {
+void init_rocket(Rocket *rkt, GPS_t *gpsData) {
     double msec2_per_microg = 1.0 / 101971.62129779282;
 
     // Datasheets used for the following:
@@ -35,12 +37,12 @@ void init_rocket(Rocket *rkt, double timestamp, GPS_t *gpsData) {
     rkt->xHat_f32[0] = INITIAL_HEIGHT;
     rkt->xHat_f32[1] = INITIAL_VELOCITY;
 
-    rkt->fsv.time_since_launch_seconds = 0.0;
-    rkt->fsv.last_predict_time_seconds = timestamp;
-    rkt->fsv.vertical_acceleration_msec2 = 0.0;
-    rkt->fsv.vertical_velocity_msec = 0.0;
-    rkt->fsv.vertical_position_m = 0.0;
-    rkt->fsv.tilt_radians = 0.0;
+    init_flight_state_variables(&rkt->fsv);
+
+    rkt->starting_launch_altitude_meters = gpsData->altitude_meters;
+
+    rkt->start_launch_timestamp_sec = -1;
+    rkt->booster_burnout_time_sec = -1;
 
     double accelVar = rkt->hguide_vertical_accel_std_msec2 * rkt->hguide_vertical_accel_std_msec2;
 
@@ -54,6 +56,8 @@ void init_rocket(Rocket *rkt, double timestamp, GPS_t *gpsData) {
                                 &rkt->F_f32[0], &rkt->G_f32[0],
                                 &rkt->P_f32[0], &rkt->Q_f32[0],
                                 &rkt->xHat_f32[0], &state_std_devs_f32[0]));
+
+    rkt->has_calibrated = false;
 }
 
 void calibrate_rocket(Rocket *rkt, HGuideIMU_t *hguideData) {
@@ -73,11 +77,17 @@ void calibrate_rocket(Rocket *rkt, HGuideIMU_t *hguideData) {
 
     arm_mat_init_f32(&rkt->hguide_axyz_local, 3, 1, rkt->hguide_axyz_local_f32);
     arm_mat_init_f32(&rkt->hguide_axyz_world, 3, 1, rkt->hguide_axyz_world_f32);
+
+    rkt->has_calibrated = true;
 }
 
-void update_rocket_state_variables(Rocket *rkt, double currentTimeS, HGuideIMU_t *hguideData, GPS_t *gpsData) {
+void update_rocket_state_variables(Rocket *rkt, double currentTimestampSec, HGuideIMU_t *hguideData, GPS_t *gpsData) {
+    if (rkt->start_launch_timestamp_sec >= 0) {
+        rkt->fsv.time_since_launch_seconds = currentTimestampSec - rkt->start_launch_timestamp_sec;
+    }
+
     if (hguideData != NULL) {
-        double dt = currentTimeS - rkt->fsv.last_predict_time_seconds;
+        double dt = currentTimestampSec - rkt->fsv.last_predict_time_seconds;
 
         // Update matrices with new dt
         rkt->kf.F.pData[0] = 1.0f;
@@ -111,17 +121,19 @@ void update_rocket_state_variables(Rocket *rkt, double currentTimeS, HGuideIMU_t
 
         ARM_CHECK_STATUS(arm_mat_mult_f32(&rkt->hguide_world_orientation_3x3, &rkt->hguide_axyz_local, &rkt->hguide_axyz_world));
 
-        rkt->fsv.vertical_acceleration_msec2 = rkt->hguide_axyz_world_f32[2] - GRAVITY_CONSTANT_MSEC2;
+        add_data_point_rolling_window(&rkt->fsv.vertical_acceleration_msec2_rw, rkt->hguide_axyz_world_f32[2] - GRAVITY_CONSTANT_MSEC2);
 
-        float32_t un_f32[1] = { (float32_t)(rkt->fsv.vertical_acceleration_msec2) };
+        
+
+        float32_t un_f32[1] = { (float32_t)(get_vertical_accel_msec2(&rkt->fsv)) };
 
         ARM_CHECK_STATUS(predict_kalman_filter(&rkt->kf, un_f32));
 
-        rkt->fsv.last_predict_time_seconds = currentTimeS;
+        rkt->fsv.last_predict_time_seconds = currentTimestampSec;
     }
 
     if (gpsData != NULL) {
-        float32_t zn_f32[1] = { (float32_t)(gpsData->altitude_meters - rkt->startingLaunchAltitude) };
+        float32_t zn_f32[1] = { (float32_t)(gpsData->altitude_meters - rkt->starting_launch_altitude_meters) };
         float32_t H_f32[2] = { 1, 0 }; // Position factor, velocity factor
 
         // TODO: eventually read the actual standard deviation from the GPS statistics frame

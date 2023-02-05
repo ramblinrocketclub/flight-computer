@@ -69,6 +69,10 @@ void quaternion_to_matrix(const Quaternion *quat, arm_matrix_instance_f32 *dst3x
     dst3x3->pData[8] = 1.0f - (2.0f * quat->x * quat->x) - (2.0f * quat->y * quat->y);
 }
 
+void rotate_vector(const Quaternion *quat, float32_t) {
+    
+}
+
 void calibrate_imu(float32_t Axyz[], arm_matrix_instance_f32 *dst3x3) {
     float32_t len;
 

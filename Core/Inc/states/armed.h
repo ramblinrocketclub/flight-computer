@@ -3,8 +3,8 @@
 
 #include "state_machine.h"
 
-void armed_initialize();
-State *armed_execute();
-void armed_finish();
+void armed_initialize(double currentTimestampSec);
+State *armed_execute(double currentTimestampSec);
+void armed_finish(double currentTimestampSec);
 
 #endif /* ARMED_H */

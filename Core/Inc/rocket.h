@@ -51,16 +51,24 @@ typedef struct Rocket {
     double gps_altitude_std_m;               // meters
 
     // The altitude at which the rocket starts at
-    double startingLaunchAltitude;
+    double starting_launch_altitude_meters;
+
+    // The time at which launch begins (-1 if launch has not started yet)
+    double start_launch_timestamp_sec;
+
+    // Time at which the booster motor burns out (-1 if hasn't occurred yet)
+    double booster_burnout_time_sec;
+
+    bool has_calibrated;
 } Rocket;
 
 // Initialize rocket properties
-void init_rocket(Rocket *rkt, double timestamp, GPS_t *gpsData);
+void init_rocket(Rocket *rkt, GPS_t *gpsData);
 
 // Find calibration matrices for sensors
 void calibrate_rocket(Rocket *rkt, HGuideIMU_t *hguideData);
 
 // Run a kalman predict step (and correct step if applicable)
-void update_rocket_state_variables(Rocket *rkt, double currentTimeS, HGuideIMU_t *hguideData, GPS_t *gpsData);
+void update_rocket_state_variables(Rocket *rkt, double currentTimestampSec, HGuideIMU_t *hguideData, GPS_t *gpsData);
 
 #endif /* ROCKET_H */

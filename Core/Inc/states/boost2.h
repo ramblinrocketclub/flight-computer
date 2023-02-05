@@ -3,8 +3,8 @@
 
 #include "state_machine.h"
 
-void boost2_initialize();
-State *boost2_execute();
-void boost2_finish();
+void boost2_initialize(double currentTimestampSec);
+State *boost2_execute(double currentTimestampSec);
+void boost2_finish(double currentTimestampSec);
 
 #endif /* BOOST2_H */

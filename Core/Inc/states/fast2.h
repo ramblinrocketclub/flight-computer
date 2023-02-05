@@ -3,8 +3,8 @@
 
 #include "state_machine.h"
 
-void fast2_initialize();
-State *fast2_execute();
-void fast2_finish();
+void fast2_initialize(double currentTimestampSec);
+State *fast2_execute(double currentTimestampSec);
+void fast2_finish(double currentTimestampSec);
 
 #endif /* FAST2_H */

@@ -31,6 +31,8 @@ OPT = -O3
 # Build path
 BUILD_DIR = build
 
+SOURCEDIR = Core/Src
+
 ######################################
 # source
 ######################################
@@ -54,6 +56,7 @@ Core/Src/states/chute.c \
 Core/Src/states/coast.c \
 Core/Src/states/fast1.c \
 Core/Src/states/fast2.c \
+Core/Src/flight_state_variables.c \
 Core/Src/states/landed.c \
 Core/Src/states/post_stage.c \
 Core/Src/states/pre_stage.c \
@@ -62,6 +65,7 @@ Core/Src/states/states.c \
 Core/Src/states/sustainer_ignition.c \
 Core/Src/rocket.c \
 Core/Src/imu_math_helper.c \
+Core/Src/rolling_window.c \
 Middlewares/Third_Party/FreeRTOS/Source/croutine.c \
 Middlewares/Third_Party/FreeRTOS/Source/event_groups.c \
 Middlewares/Third_Party/FreeRTOS/Source/list.c \
