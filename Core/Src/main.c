@@ -42,11 +42,6 @@ volatile uint8_t uart9_rx_finished = 0;
 volatile uint8_t uart7_tx_finished = 0;
 volatile uint8_t uart7_rx_finished = 0;
 
-Rocket rocket;
-RTC_Time_t rtc_time;
-
-double initialize_timestamp = 0;
-
 TaskHandle_t hguide_imu_processing_task_handle = NULL;
 TaskHandle_t gps_processing_task_handle = NULL;
 
@@ -65,24 +60,6 @@ void HGuideIMUProcessingTask(void *parameters)
 
         RingBuffer_Put(&hguide_imu_data, (uint8_t *) uart7_rx_data, SIZE(uart7_rx_data));
         ProcessHGuidei300(&hguide_imu, &hguide_imu_data);
-
-        double current_timestamp = RTC_GetTimestamp(&rtc_time);
-
-        // New IMU data has arrived
-        if (!rocket.has_calibrated) {
-            // If it has been more than 0.5 seconds since initialization, calibrate IMU
-            if (current_timestamp - initialize_timestamp > 0.5) {
-                calibrate_rocket(&rocket, &hguide_imu);
-
-                sprintf((char *) usart3_tx_data, "Finished calibrating\n");
-                USART3_DMA1_Stream3_Write((uint8_t *) usart3_tx_data, strlen((char *) usart3_tx_data));
-            }
-        } else {
-            update_rocket_state_variables(&rocket, current_timestamp, &hguide_imu, NULL);
-
-            sprintf((char *) usart3_tx_data, "Height (m): %f\n", rocket.xHat_f32[0]);
-            USART3_DMA1_Stream3_Write((uint8_t *) usart3_tx_data, strlen((char *) usart3_tx_data));
-        }
 
         taskEXIT_CRITICAL();
     }
@@ -126,22 +103,14 @@ int main(void)
     GPIO_Init();
     UART_Init();
     DMA_Init();
-    RTC_Init();
 
-    GPS_t gps;
-
-    gps.altitude_meters = 0;
-
-    // Init rocket
-    init_rocket(&rocket, &gps);
-
-    xTaskCreate(
-        HGuideIMUProcessingTask,                /* Function that implements the task. */
-        "HGuideIMUProcessing",                  /* Text name for the task. */
-        1024,                                   /* Stack size in words, not bytes. */
-        NULL,                                   /* Parameter passed into the task. */
-        tskIDLE_PRIORITY,                       /* Priority at which the task is created. */
-        &hguide_imu_processing_task_handle);    /* Used to pass out the created task's handle. */
+    // xTaskCreate(
+    //     HGuideIMUProcessingTask,                /* Function that implements the task. */
+    //     "HGuideIMUProcessing",                  /* Text name for the task. */
+    //     1024,                                   /* Stack size in words, not bytes. */
+    //     NULL,                                   /* Parameter passed into the task. */
+    //     tskIDLE_PRIORITY,                       /* Priority at which the task is created. */
+    //     &hguide_imu_processing_task_handle);    /* Used to pass out the created task's handle. */
 
     xTaskCreate(
         GPSProcessingTask,              /* Function that implements the task. */
@@ -270,11 +239,11 @@ void DMA_Init(void)
 
     DMA1_Stream2->PAR = (uint32_t) &UART7->RDR;
 
-    LL_DMA_SetPeriphRequest(DMA1, 0, 81U);
+    LL_DMA_SetPeriphRequest(DMA1, 0, 116U);
     LL_DMA_SetPeriphRequest(DMA1, 1, 45U);
     LL_DMA_SetPeriphRequest(DMA1, 2, 79U);
     LL_DMA_SetPeriphRequest(DMA1, 3, 46U);
-    LL_DMA_SetPeriphRequest(DMA1, 4, 82U);
+    LL_DMA_SetPeriphRequest(DMA1, 4, 117U);
 
     NVIC_SetPriority(DMA1_Stream0_IRQn, 5);
     NVIC_SetPriority(DMA1_Stream1_IRQn, 5);
@@ -373,3 +342,4 @@ void _putchar(char character)
     usart3_tx_data[1] = '\0';
     USART3_DMA1_Stream3_Write((uint8_t *) usart3_tx_data, 1);
 }
+
