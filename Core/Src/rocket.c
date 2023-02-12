@@ -157,6 +157,12 @@ void update_rocket_state_variables(Rocket *rkt, double currentTimestampSec, HGui
         ARM_CHECK_STATUS(predict_kalman_filter(&rkt->kf, un_f32));
 
         rkt->fsv.last_predict_time_seconds = currentTimestampSec;
+
+        if (gpsData == NULL) {
+            // Add state estimates immediately as there is no GPS data to correct
+            add_data_point_rolling_window(&rkt->fsv.vertical_position_m_rw, rkt->xHat_f32[0]);
+            add_data_point_rolling_window(&rkt->fsv.vertical_velocity_msec_rw, rkt->xHat_f32[1]);
+        }
     }
 
     if (gpsData != NULL) {
@@ -167,6 +173,9 @@ void update_rocket_state_variables(Rocket *rkt, double currentTimestampSec, HGui
         float32_t measurementStdDevs[1] = { (float32_t)(rkt->gps_altitude_std_m) };
 
         ARM_CHECK_STATUS(correct_kalman_filter(&rkt->kf, 1, zn_f32, H_f32, measurementStdDevs));
+
+        add_data_point_rolling_window(&rkt->fsv.vertical_position_m_rw, rkt->xHat_f32[0]);
+        add_data_point_rolling_window(&rkt->fsv.vertical_velocity_msec_rw, rkt->xHat_f32[1]);
     }
 }
 
