@@ -20,8 +20,8 @@ uint8_t Is_USART3_Buffer_Full(void);
 uint8_t Is_UART9_Buffer_Full(void);
 uint8_t Is_UART7_Buffer_Full(void);
 
-__attribute__ ((section(".buffer"))) extern volatile uint8_t uart8_rx_data[];
-__attribute__ ((section(".buffer"))) extern volatile uint8_t uart8_tx_data[];
+__attribute__ ((section(".buffer"))) extern volatile uint8_t uart9_rx_data[];
+__attribute__ ((section(".buffer"))) extern volatile uint8_t uart9_tx_data[];
 __attribute__ ((section(".buffer"))) extern volatile uint8_t uart7_rx_data[];
 __attribute__ ((section(".buffer"))) extern volatile uint8_t uart7_tx_data[];
 __attribute__ ((section(".buffer"))) extern volatile uint8_t usart3_rx_data[];
