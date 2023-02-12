@@ -38,7 +38,7 @@ void init_rocket(Rocket *rkt, GPS_t *gpsData) {
     rkt->xHat_f32[0] = INITIAL_HEIGHT;
     rkt->xHat_f32[1] = INITIAL_VELOCITY;
 
-    rkt->last_predict_time_seconds = -1;
+    rkt->fsv.last_predict_time_seconds = -1;
 
     init_flight_state_variables(&rkt->fsv);
 
@@ -125,7 +125,7 @@ void update_rocket_state_variables(Rocket *rkt, double currentTimestampSec, HGui
 
             ARM_CHECK_STATUS(arm_mat_mult_f32(&rkt->hguide_world_orientation_3x3, &rkt->hguide_axyz_local, &rkt->hguide_axyz_world));
 
-            add_data_point_rolling_window(&rkt->fsv.vertical_acceleration_msec2_rw, rkt->hguide_axyz_world_f32[2] - GRAVITY_CONSTANT_MSEC2);
+            add_data_point_rolling_window(&rkt->fsv.vertical_acceleration_msec2_rw, rkt->hguide_axyz_world_f32[2] + GRAVITY_CONSTANT_MSEC2);
 
             double up[3] = { 0.0, 0.0, 1.0 };
             double orientation_vector[3] = { 0.0, 0.0, 0.0 };

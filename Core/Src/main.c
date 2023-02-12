@@ -81,7 +81,7 @@ void HGuideIMUProcessingTask(void *parameters)
         } else {
             update_rocket_state_variables(&rocket, current_timestamp, &hguide_imu, NULL);
 
-            sprintf((char *) usart3_tx_data, "Height (m): %f\n", get_vertical_pos_m(&rkt.fsv));
+            sprintf((char *) usart3_tx_data, "Height (m): %f\n", get_vertical_pos_m(&rocket.fsv));
             USART3_DMA1_Stream3_Write((uint8_t *) usart3_tx_data, strlen((char *) usart3_tx_data));
         }
 
