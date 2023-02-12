@@ -104,13 +104,13 @@ int main(void)
     UART_Init();
     DMA_Init();
 
-    // xTaskCreate(
-    //     HGuideIMUProcessingTask,                /* Function that implements the task. */
-    //     "HGuideIMUProcessing",                  /* Text name for the task. */
-    //     1024,                                   /* Stack size in words, not bytes. */
-    //     NULL,                                   /* Parameter passed into the task. */
-    //     tskIDLE_PRIORITY,                       /* Priority at which the task is created. */
-    //     &hguide_imu_processing_task_handle);    /* Used to pass out the created task's handle. */
+    xTaskCreate(
+        HGuideIMUProcessingTask,                /* Function that implements the task. */
+        "HGuideIMUProcessing",                  /* Text name for the task. */
+        1024,                                   /* Stack size in words, not bytes. */
+        NULL,                                   /* Parameter passed into the task. */
+        tskIDLE_PRIORITY,                       /* Priority at which the task is created. */
+        &hguide_imu_processing_task_handle);    /* Used to pass out the created task's handle. */
 
     xTaskCreate(
         GPSProcessingTask,              /* Function that implements the task. */
