@@ -6,6 +6,7 @@
 #include "event_constants.h"
 #include "states/flight_state_variables.h"
 #include "rolling_window.h"
+#include "arm_math.h"
 
 void init_rocket(Rocket *rkt, GPS_t *gpsData) {
     double msec2_per_microg = 1.0 / 101971.62129779282;
@@ -123,7 +124,33 @@ void update_rocket_state_variables(Rocket *rkt, double currentTimestampSec, HGui
 
         add_data_point_rolling_window(&rkt->fsv.vertical_acceleration_msec2_rw, rkt->hguide_axyz_world_f32[2] - GRAVITY_CONSTANT_MSEC2);
 
-        
+        double up[3] = { 0.0, 0.0, 1.0 };
+        double orientation_vector[3] = { 0.0, 0.0, 0.0 };
+
+        rotate_vector(&rkt->hguide_local_orientation, up, orientation_vector);
+
+        double dot_product = up[0] * orientation_vector[0] + up[1] * orientation_vector[1] + up[2] * orientation_vector[2];
+        double up_magnitude = 1.0;
+
+        float32_t orientation_magnitude;
+
+        ARM_CHECK_STATUS(arm_sqrt_f32((float32_t)(orientation_vector[0] * orientation_vector[0] 
+                                        + orientation_vector[1] * orientation_vector[1] 
+                                        + orientation_vector[2] * orientation_vector[2]), &orientation_magnitude));
+
+        double cos_theta = dot_product / (up_magnitude * (double)orientation_magnitude);
+
+        // float32_t tan_theta = 1.0f;
+
+        // ARM_CHECK_STATUS(arm_sqrt_f32((1.0 / (cos_theta * cos_theta)) - 1.0, &tan_theta));
+
+        // float32_t theta_rad = 0.0f;
+
+        // ARM_CHECK_STATUS(arm_atan2_f32(tan_theta, 1.0f, &theta_rad));
+
+        double theta_rad = acos(cos_theta);
+
+        add_data_point_rolling_window(&rkt->fsv.tilt_radians_rw, theta_rad);
 
         float32_t un_f32[1] = { (float32_t)(get_vertical_accel_msec2(&rkt->fsv)) };
 

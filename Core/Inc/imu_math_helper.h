@@ -15,7 +15,7 @@ double get_length_quaternion(const Quaternion *quat);
 Quaternion normalize_quaternion(const Quaternion *quat);
 Quaternion mult_quaternions(const Quaternion *a, const Quaternion *b);
 void quaternion_to_matrix(const Quaternion *quat, arm_matrix_instance_f32 *dst3x3);
-void rotate_vector(const Quaternion *quat, float32_t);
+void rotate_vector(const Quaternion *quat, double vectorXYZ[], double dstXYZ[]);
 
 void calibrate_imu(float32_t Axyz[], arm_matrix_instance_f32 *dst3x3);
 Quaternion update_local_orientation(Quaternion *initialPose, double gXRPS, double gYRPS, double gZRPS, 

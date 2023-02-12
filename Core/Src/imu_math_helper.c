@@ -69,8 +69,21 @@ void quaternion_to_matrix(const Quaternion *quat, arm_matrix_instance_f32 *dst3x
     dst3x3->pData[8] = 1.0f - (2.0f * quat->x * quat->x) - (2.0f * quat->y * quat->y);
 }
 
-void rotate_vector(const Quaternion *quat, float32_t) {
-    
+void rotate_vector(const Quaternion *quat, double vectorXYZ[], double dstXYZ[]) {
+    double tmpX, tmpY, tmpZ, tmpW;
+
+    double x = vectorXYZ[0];
+    double y = vectorXYZ[1];
+    double z = vectorXYZ[2];
+
+    tmpX = (((quat->w * x) + (quat->y * z)) - (quat->z * y));
+    tmpY = (((quat->w * y) + (quat->z * x)) - (quat->x * z));
+    tmpZ = (((quat->w * z) + (quat->x * y)) - (quat->y * x));
+    tmpW = (((quat->x * x) + (quat->y * y)) + (quat->z * z));
+
+    dstXYZ[0] = ((((tmpW * quat->x) + (tmpX * quat->w)) - (tmpY * quat->z)) + (tmpZ * quat->y));
+	dstXYZ[1] =	((((tmpW * quat->y) + (tmpY * quat->w)) - (tmpZ * quat->x)) + (tmpX * quat->z));
+	dstXYZ[2] = ((((tmpW * quat->z) + (tmpZ * quat->w)) - (tmpX * quat->y)) + (tmpY * quat->x));
 }
 
 void calibrate_imu(float32_t Axyz[], arm_matrix_instance_f32 *dst3x3) {
