@@ -14,6 +14,7 @@
 #include "rtc.h"
 #include "printf.h"
 #include "rocket.h"
+#include "states/flight_state_variables.h"
 
 #define AF07                    7UL
 #define AF08                    8UL
@@ -80,7 +81,7 @@ void HGuideIMUProcessingTask(void *parameters)
         } else {
             update_rocket_state_variables(&rocket, current_timestamp, &hguide_imu, NULL);
 
-            sprintf((char *) usart3_tx_data, "Height (m): %f\n", rocket.xHat_f32[0]);
+            sprintf((char *) usart3_tx_data, "Height (m): %f\n", get_vertical_pos_m(&rkt.fsv));
             USART3_DMA1_Stream3_Write((uint8_t *) usart3_tx_data, strlen((char *) usart3_tx_data));
         }
 

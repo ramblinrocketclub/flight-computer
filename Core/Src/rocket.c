@@ -38,6 +38,8 @@ void init_rocket(Rocket *rkt, GPS_t *gpsData) {
     rkt->xHat_f32[0] = INITIAL_HEIGHT;
     rkt->xHat_f32[1] = INITIAL_VELOCITY;
 
+    rkt->last_predict_time_seconds = -1;
+
     init_flight_state_variables(&rkt->fsv);
 
     rkt->starting_launch_altitude_meters = gpsData->altitude_meters;
@@ -88,80 +90,84 @@ void update_rocket_state_variables(Rocket *rkt, double currentTimestampSec, HGui
     }
 
     if (hguideData != NULL) {
-        double dt = currentTimestampSec - rkt->fsv.last_predict_time_seconds;
+        if (rkt->fsv.last_predict_time_seconds >= 0) {
+            double dt = currentTimestampSec - rkt->fsv.last_predict_time_seconds;
 
-        // Update matrices with new dt
-        rkt->kf.F.pData[0] = 1.0f;
-        rkt->kf.F.pData[1] = dt;
-        rkt->kf.F.pData[2] = 0.0f;
-        rkt->kf.F.pData[3] = 1.0f;
+            // Update matrices with new dt
+            rkt->kf.F.pData[0] = 1.0f;
+            rkt->kf.F.pData[1] = dt;
+            rkt->kf.F.pData[2] = 0.0f;
+            rkt->kf.F.pData[3] = 1.0f;
 
-        rkt->kf.G.pData[0] = 0.5 * dt * dt;
-        rkt->kf.G.pData[1] = dt;
+            rkt->kf.G.pData[0] = 0.5 * dt * dt;
+            rkt->kf.G.pData[1] = dt;
 
-        double accelVar = rkt->hguide_vertical_accel_std_msec2 * rkt->hguide_vertical_accel_std_msec2;
+            double accelVar = rkt->hguide_vertical_accel_std_msec2 * rkt->hguide_vertical_accel_std_msec2;
 
-        rkt->kf.Q.pData[0] = (dt * dt * dt * dt) / 4.0 * accelVar;
-        rkt->kf.Q.pData[1] = (dt * dt * dt) / 2.0 * accelVar;
-        rkt->kf.Q.pData[2] = (dt * dt * dt) / 2.0 * accelVar;
-        rkt->kf.Q.pData[3] = dt * dt * accelVar;
+            rkt->kf.Q.pData[0] = (dt * dt * dt * dt) / 4.0 * accelVar;
+            rkt->kf.Q.pData[1] = (dt * dt * dt) / 2.0 * accelVar;
+            rkt->kf.Q.pData[2] = (dt * dt * dt) / 2.0 * accelVar;
+            rkt->kf.Q.pData[3] = dt * dt * accelVar;
 
-        double wx = GetAngularRateXRadPerSec(hguideData);
-        double wy = GetAngularRateYRadPerSec(hguideData);
-        double wz = GetAngularRateZRadPerSec(hguideData);
+            double wx = GetAngularRateXRadPerSec(hguideData);
+            double wy = GetAngularRateYRadPerSec(hguideData);
+            double wz = GetAngularRateZRadPerSec(hguideData);
 
-        // Update orientation
-        rkt->hguide_local_orientation = update_local_orientation(&rkt->hguide_local_orientation, wx, wy, wz, dt);
+            // Update orientation
+            rkt->hguide_local_orientation = update_local_orientation(&rkt->hguide_local_orientation, wx, wy, wz, dt);
 
-        get_world_rotation_matrix(&rkt->hguide_local_to_world_3x3, &rkt->hguide_local_orientation, &rkt->hguide_world_orientation_3x3);
+            get_world_rotation_matrix(&rkt->hguide_local_to_world_3x3, &rkt->hguide_local_orientation, &rkt->hguide_world_orientation_3x3);
 
-        // Transform linear accelerations
-        rkt->hguide_axyz_local_f32[0] = GetLinearAccelerationXMsec2(hguideData);
-        rkt->hguide_axyz_local_f32[1] = GetLinearAccelerationYMsec2(hguideData);
-        rkt->hguide_axyz_local_f32[2] = GetLinearAccelerationZMsec2(hguideData);
+            // Transform linear accelerations
+            rkt->hguide_axyz_local_f32[0] = GetLinearAccelerationXMsec2(hguideData);
+            rkt->hguide_axyz_local_f32[1] = GetLinearAccelerationYMsec2(hguideData);
+            rkt->hguide_axyz_local_f32[2] = GetLinearAccelerationZMsec2(hguideData);
 
-        ARM_CHECK_STATUS(arm_mat_mult_f32(&rkt->hguide_world_orientation_3x3, &rkt->hguide_axyz_local, &rkt->hguide_axyz_world));
+            ARM_CHECK_STATUS(arm_mat_mult_f32(&rkt->hguide_world_orientation_3x3, &rkt->hguide_axyz_local, &rkt->hguide_axyz_world));
 
-        add_data_point_rolling_window(&rkt->fsv.vertical_acceleration_msec2_rw, rkt->hguide_axyz_world_f32[2] - GRAVITY_CONSTANT_MSEC2);
+            add_data_point_rolling_window(&rkt->fsv.vertical_acceleration_msec2_rw, rkt->hguide_axyz_world_f32[2] - GRAVITY_CONSTANT_MSEC2);
 
-        double up[3] = { 0.0, 0.0, 1.0 };
-        double orientation_vector[3] = { 0.0, 0.0, 0.0 };
+            double up[3] = { 0.0, 0.0, 1.0 };
+            double orientation_vector[3] = { 0.0, 0.0, 0.0 };
 
-        rotate_vector(&rkt->hguide_local_orientation, up, orientation_vector);
+            rotate_vector(&rkt->hguide_local_orientation, up, orientation_vector);
 
-        double dot_product = up[0] * orientation_vector[0] + up[1] * orientation_vector[1] + up[2] * orientation_vector[2];
-        double up_magnitude = 1.0;
+            double dot_product = up[0] * orientation_vector[0] + up[1] * orientation_vector[1] + up[2] * orientation_vector[2];
+            double up_magnitude = 1.0;
 
-        float32_t orientation_magnitude;
+            float32_t orientation_magnitude;
 
-        ARM_CHECK_STATUS(arm_sqrt_f32((float32_t)(orientation_vector[0] * orientation_vector[0] 
-                                        + orientation_vector[1] * orientation_vector[1] 
-                                        + orientation_vector[2] * orientation_vector[2]), &orientation_magnitude));
+            ARM_CHECK_STATUS(arm_sqrt_f32((float32_t)(orientation_vector[0] * orientation_vector[0] 
+                                            + orientation_vector[1] * orientation_vector[1] 
+                                            + orientation_vector[2] * orientation_vector[2]), &orientation_magnitude));
 
-        double cos_theta = dot_product / (up_magnitude * (double)orientation_magnitude);
+            double cos_theta = dot_product / (up_magnitude * (double)orientation_magnitude);
 
-        // float32_t tan_theta = 1.0f;
+            // float32_t tan_theta = 1.0f;
 
-        // ARM_CHECK_STATUS(arm_sqrt_f32((1.0 / (cos_theta * cos_theta)) - 1.0, &tan_theta));
+            // ARM_CHECK_STATUS(arm_sqrt_f32((1.0 / (cos_theta * cos_theta)) - 1.0, &tan_theta));
 
-        // float32_t theta_rad = 0.0f;
+            // float32_t theta_rad = 0.0f;
 
-        // ARM_CHECK_STATUS(arm_atan2_f32(tan_theta, 1.0f, &theta_rad));
+            // ARM_CHECK_STATUS(arm_atan2_f32(tan_theta, 1.0f, &theta_rad));
 
-        double theta_rad = acos(cos_theta);
+            double theta_rad = acos(cos_theta);
 
-        add_data_point_rolling_window(&rkt->fsv.tilt_radians_rw, theta_rad);
+            add_data_point_rolling_window(&rkt->fsv.tilt_radians_rw, theta_rad);
 
-        float32_t un_f32[1] = { (float32_t)(get_vertical_accel_msec2(&rkt->fsv)) };
+            float32_t un_f32[1] = { (float32_t)(get_vertical_accel_msec2(&rkt->fsv)) };
 
-        ARM_CHECK_STATUS(predict_kalman_filter(&rkt->kf, un_f32));
+            ARM_CHECK_STATUS(predict_kalman_filter(&rkt->kf, un_f32));
 
-        rkt->fsv.last_predict_time_seconds = currentTimestampSec;
+            rkt->fsv.last_predict_time_seconds = currentTimestampSec;
 
-        if (gpsData == NULL) {
-            // Add state estimates immediately as there is no GPS data to correct
-            add_data_point_rolling_window(&rkt->fsv.vertical_position_m_rw, rkt->xHat_f32[0]);
-            add_data_point_rolling_window(&rkt->fsv.vertical_velocity_msec_rw, rkt->xHat_f32[1]);
+            if (gpsData == NULL) {
+                // Add state estimates immediately as there is no GPS data to correct
+                add_data_point_rolling_window(&rkt->fsv.vertical_position_m_rw, rkt->xHat_f32[0]);
+                add_data_point_rolling_window(&rkt->fsv.vertical_velocity_msec_rw, rkt->xHat_f32[1]);
+            }
+        } else {
+            rkt->fsv.last_predict_time_seconds = currentTimestampSec;
         }
     }
 
