@@ -32,7 +32,8 @@ void RTC_GetTime(RTC_Time_t *pTime)
     pTime->hours        = ConvertBCDToBinary((uint8_t) ((RTC->TR & RTC_TR_HT)   >> (RTC_TR_HT_Pos - 4))     + (uint8_t) ((RTC->TR & RTC_TR_HU)  >> RTC_TR_HU_Pos));
     pTime->minutes      = ConvertBCDToBinary((uint8_t) ((RTC->TR & RTC_TR_MNT)  >> (RTC_TR_MNT_Pos - 4))    + (uint8_t) ((RTC->TR & RTC_TR_MNU) >> RTC_TR_MNU_Pos));
     pTime->seconds      = ConvertBCDToBinary((uint8_t) ((RTC->TR & RTC_TR_ST)   >> (RTC_TR_ST_Pos - 4))     + (uint8_t) ((RTC->TR & RTC_TR_SU)  >> RTC_TR_SU_Pos));
-    pTime->subseconds   = (1000 * ((RTC->PRER & RTC_PRER_PREDIV_S) - RTC->SSR)) / (RTC->SSR + 1);
+    pTime->subseconds   =  (1000 * ((RTC->PRER & RTC_PRER_PREDIV_S) - RTC->SSR)) / ((RTC->PRER & RTC_PRER_PREDIV_S) + 1);
+
 }
 
 void RTC_GetDate(RTC_Date_t *pDate)
@@ -47,3 +48,4 @@ double RTC_GetTimestamp(RTC_Time_t *pTime) {
     RTC_GetTime(pTime);
     return pTime->hours * 3600.0 + pTime->minutes * 60.0 + pTime->seconds + ((double)pTime->subseconds / 1000.0);
 }
+
