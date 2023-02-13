@@ -125,7 +125,7 @@ void update_rocket_state_variables(Rocket *rkt, double currentTimestampSec, HGui
 
             ARM_CHECK_STATUS(arm_mat_mult_f32(&rkt->hguide_world_orientation_3x3, &rkt->hguide_axyz_local, &rkt->hguide_axyz_world));
 
-            add_data_point_rolling_window(&rkt->fsv.vertical_acceleration_msec2_rw, rkt->hguide_axyz_world_f32[2] + GRAVITY_CONSTANT_MSEC2);
+            add_data_point_rolling_window(&rkt->fsv.vertical_acceleration_msec2_rw, rkt->hguide_axyz_local_f32[2]);
 
             double up[3] = { 0.0, 0.0, 1.0 };
             double orientation_vector[3] = { 0.0, 0.0, 0.0 };
@@ -137,8 +137,8 @@ void update_rocket_state_variables(Rocket *rkt, double currentTimestampSec, HGui
 
             float32_t orientation_magnitude;
 
-            ARM_CHECK_STATUS(arm_sqrt_f32((float32_t)(orientation_vector[0] * orientation_vector[0] 
-                                            + orientation_vector[1] * orientation_vector[1] 
+            ARM_CHECK_STATUS(arm_sqrt_f32((float32_t)(orientation_vector[0] * orientation_vector[0]
+                                            + orientation_vector[1] * orientation_vector[1]
                                             + orientation_vector[2] * orientation_vector[2]), &orientation_magnitude));
 
             double cos_theta = dot_product / (up_magnitude * (double)orientation_magnitude);

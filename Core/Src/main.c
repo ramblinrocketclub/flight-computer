@@ -75,13 +75,13 @@ void HGuideIMUProcessingTask(void *parameters)
             if (current_timestamp - initialize_timestamp > 0.5) {
                 calibrate_rocket(&rocket, &hguide_imu);
 
-                sprintf((char *) usart3_tx_data, "Finished calibrating\n");
+                sprintf((char *) usart3_tx_data, "Finished calibrating\r\n");
                 USART3_DMA1_Stream3_Write((uint8_t *) usart3_tx_data, strlen((char *) usart3_tx_data));
             }
         } else {
             update_rocket_state_variables(&rocket, current_timestamp, &hguide_imu, NULL);
 
-            sprintf((char *) usart3_tx_data, "Height (m): %f\n", get_vertical_pos_m(&rocket.fsv));
+            sprintf((char *) usart3_tx_data, "%lf\r\n", get_vertical_accel_msec2(&rocket.fsv));
             USART3_DMA1_Stream3_Write((uint8_t *) usart3_tx_data, strlen((char *) usart3_tx_data));
         }
 
