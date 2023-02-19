@@ -69,6 +69,12 @@ void HGuideIMUProcessingTask(void *parameters)
 
         double current_timestamp = RTC_GetTimestamp(&rtc_time);
 
+        sprintf((char *) usart3_tx_data, "Body ax: %lf, ay: %lf, az: %lf\r\n", GetLinearAccelerationXMsec2(&hguide_imu),
+                                                                             GetLinearAccelerationYMsec2(&hguide_imu),
+                                                                             GetLinearAccelerationZMsec2(&hguide_imu));
+
+        USART3_DMA1_Stream3_Write((uint8_t *) usart3_tx_data, strlen((char *) usart3_tx_data));
+
         // New IMU data has arrived
         if (!rocket.has_calibrated) {
             // If it has been more than 0.5 seconds since initialization, calibrate IMU
@@ -81,7 +87,7 @@ void HGuideIMUProcessingTask(void *parameters)
         } else {
             update_rocket_state_variables(&rocket, current_timestamp, &hguide_imu, NULL);
 
-            sprintf((char *) usart3_tx_data, "%lf\r\n", get_vertical_accel_msec2(&rocket.fsv));
+            // sprintf((char *) usart3_tx_data, "%lf\r\n", get_vertical_accel_msec2(&rocket.fsv));
             USART3_DMA1_Stream3_Write((uint8_t *) usart3_tx_data, strlen((char *) usart3_tx_data));
         }
 

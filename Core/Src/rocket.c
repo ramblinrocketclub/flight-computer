@@ -116,7 +116,7 @@ void update_rocket_state_variables(Rocket *rkt, double currentTimestampSec, HGui
             // Update orientation
             rkt->hguide_local_orientation = update_local_orientation(&rkt->hguide_local_orientation, wx, wy, wz, dt);
 
-            get_world_rotation_matrix(&rkt->hguide_local_to_world_3x3, &rkt->hguide_local_orientation, &rkt->hguide_world_orientation_3x3);
+            ARM_CHECK_STATUS(get_world_rotation_matrix(&rkt->hguide_local_to_world_3x3, &rkt->hguide_local_orientation, &rkt->hguide_world_orientation_3x3));
 
             // Transform linear accelerations
             rkt->hguide_axyz_local_f32[0] = GetLinearAccelerationXMsec2(hguideData);
