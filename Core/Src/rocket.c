@@ -46,6 +46,7 @@ void init_rocket(Rocket *rkt, GPS_t *gpsData) {
 
     rkt->start_launch_timestamp_sec = -1;
     rkt->booster_burnout_time_sec = -1;
+    rkt->sustainer_ignition_time_sec = -1;
 
     double accelVar = rkt->hguide_vertical_accel_std_msec2 * rkt->hguide_vertical_accel_std_msec2;
 

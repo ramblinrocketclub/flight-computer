@@ -59,6 +59,9 @@ typedef struct Rocket {
     // Time at which the booster motor burns out (-1 if hasn't occurred yet)
     double booster_burnout_time_sec;
 
+    // Time at which the sustainer motor is ignited (-1 if hasn't occured yet)
+    double sustainer_ignition_time_sec;
+
     bool has_calibrated;
 } Rocket;
 

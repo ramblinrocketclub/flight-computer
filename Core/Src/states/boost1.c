@@ -4,14 +4,14 @@
 
 void boost1_initialize(double currentTimestampSec) {
     printf("Entered boost1 state");
-
+    //start time since launch counter
     rocket.start_launch_timestamp_sec = currentTimestampSec;
 }
 
 State *boost1_execute(double currentTimestampSec) {
-    if (rocket.fsv.time_since_launch_seconds >= BOOSTER_BURNOUT_TIME_SEC
-        && get_vertical_accel_msec2(&rocket.fsv) < BOOSTER_BURNOUT_ACCEL_THRESH_MSEC2) {
-        return &fast1;
+    //move on to coast1 when time since launch reaches booster burnout threshold
+    if (rocket.fsv.time_since_launch_seconds >= BOOSTER_BURNOUT_TIME_SEC) {
+        return &coast1;
     }
 
     return &boost1;
@@ -19,4 +19,5 @@ State *boost1_execute(double currentTimestampSec) {
 
 void boost1_finish(double currentTimestampSec) {
     rocket.booster_burnout_time_sec = currentTimestampSec;
+    //TODO: Stage
 }
