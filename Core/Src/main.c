@@ -69,9 +69,9 @@ void HGuideIMUProcessingTask(void *parameters)
 
         double current_timestamp = RTC_GetTimestamp(&rtc_time);
 
-        sprintf((char *) usart3_tx_data, "Body ax: %lf, ay: %lf, az: %lf\r\n", GetLinearAccelerationXMsec2(&hguide_imu),
-                                                                             GetLinearAccelerationYMsec2(&hguide_imu),
-                                                                             GetLinearAccelerationZMsec2(&hguide_imu));
+        sprintf((char *) usart3_tx_data, "%lf, %lf, %lf\r\n", GetLinearAccelerationXMsec2(&hguide_imu),
+                                                                GetLinearAccelerationYMsec2(&hguide_imu),
+                                                                GetLinearAccelerationZMsec2(&hguide_imu));
 
         USART3_DMA1_Stream3_Write((uint8_t *) usart3_tx_data, strlen((char *) usart3_tx_data));
 
