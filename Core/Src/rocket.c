@@ -48,6 +48,13 @@ void init_rocket(Rocket *rkt, GPS_t *gpsData) {
     rkt->booster_burnout_time_sec = -1;
 
     double accelVar = rkt->hguide_vertical_accel_std_msec2 * rkt->hguide_vertical_accel_std_msec2;
+    
+    init_quaternion_xyzw(&rkt->hguide_local_orientation, 0, 0, 0, 1);
+
+    arm_mat_init_f32(&rkt->hguide_world_orientation_3x3, 3, 3, rkt->hguide_world_orientation_3x3_f32);
+
+    arm_mat_init_f32(&rkt->hguide_axyz_local, 3, 1, rkt->hguide_axyz_local_f32);
+    arm_mat_init_f32(&rkt->hguide_axyz_world, 3, 1, rkt->hguide_axyz_world_f32);
 
     float32_t state_std_devs_f32[2] = {
         // Position std, velocity std
@@ -73,13 +80,6 @@ void calibrate_rocket(Rocket *rkt, HGuideIMU_t *hguideData) {
     };
 
     calibrate_imu(Axyz, &rkt->hguide_local_to_world_3x3);
-
-    init_quaternion_xyzw(&rkt->hguide_local_orientation, 0, 0, 0, 1);
-
-    arm_mat_init_f32(&rkt->hguide_world_orientation_3x3, 3, 3, rkt->hguide_world_orientation_3x3_f32);
-
-    arm_mat_init_f32(&rkt->hguide_axyz_local, 3, 1, rkt->hguide_axyz_local_f32);
-    arm_mat_init_f32(&rkt->hguide_axyz_world, 3, 1, rkt->hguide_axyz_world_f32);
 
     rkt->has_calibrated = true;
 }
