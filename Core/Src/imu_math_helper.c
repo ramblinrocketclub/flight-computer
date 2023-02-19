@@ -54,8 +54,8 @@ Quaternion mult_quaternions(const Quaternion *a, const Quaternion *b) {
 
     init_quaternion_xyzw(&result, 
             (((a_norm.w * b_norm.x) + (a_norm.x * b_norm.w)) + (a_norm.y * b_norm.z)) - (a_norm.z * b_norm.y),
-			(((a_norm.w * b_norm.y) + (a_norm.y * b_norm.w)) + (a_norm.z * b_norm.x)) - (a_norm.x * b_norm.z),
-			(((a_norm.w * b_norm.z) + (a_norm.z * b_norm.w)) + (a_norm.x * b_norm.y)) - (a_norm.y * b_norm.x),
+			(((a_norm.w * b_norm.y) - (a_norm.x * b_norm.z)) + (a_norm.y * b_norm.w)) + (a_norm.z * b_norm.x),
+			(((a_norm.w * b_norm.z) + (a_norm.x * b_norm.y)) - (a_norm.y * b_norm.x)) + (a_norm.z * b_norm.w),
 			(((a_norm.w * b_norm.w) - (a_norm.x * b_norm.x)) - (a_norm.y * b_norm.y)) - (a_norm.z * b_norm.z)
     );
 
