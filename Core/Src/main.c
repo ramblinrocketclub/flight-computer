@@ -15,6 +15,7 @@
 #include "printf.h"
 #include "rocket.h"
 #include "states/flight_state_variables.h"
+#include "kalman_filter.h"
 
 #define AF07                    7UL
 #define AF08                    8UL
@@ -69,9 +70,9 @@ void HGuideIMUProcessingTask(void *parameters)
 
         double current_timestamp = RTC_GetTimestamp(&rtc_time);
 
-        sprintf((char *) usart3_tx_data, "%lf, %lf, %lf\r\n", GetLinearAccelerationXMsec2(&hguide_imu),
-                                                                GetLinearAccelerationYMsec2(&hguide_imu),
-                                                                GetLinearAccelerationZMsec2(&hguide_imu));
+        // sprintf((char *) usart3_tx_data, "%lf, %lf, %lf\r\n", GetLinearAccelerationXMsec2(&hguide_imu),
+        //                                                         GetLinearAccelerationYMsec2(&hguide_imu),
+        //                                                         GetLinearAccelerationZMsec2(&hguide_imu));
 
         USART3_DMA1_Stream3_Write((uint8_t *) usart3_tx_data, strlen((char *) usart3_tx_data));
 
@@ -81,8 +82,15 @@ void HGuideIMUProcessingTask(void *parameters)
             if (current_timestamp - initialize_timestamp > 0.5) {
                 calibrate_rocket(&rocket, &hguide_imu);
 
+                sprintf((char *) usart3_tx_data, "Calibration vector: %lf, %lf, %lf\r\n", GetLinearAccelerationXMsec2(&hguide_imu),
+                                                        GetLinearAccelerationYMsec2(&hguide_imu),
+                                                        GetLinearAccelerationZMsec2(&hguide_imu));
+
                 sprintf((char *) usart3_tx_data, "Finished calibrating\r\n");
+
                 USART3_DMA1_Stream3_Write((uint8_t *) usart3_tx_data, strlen((char *) usart3_tx_data));
+
+                print_matrix(&rocket.hguide_local_to_world_3x3, "Calibration matrix: ");
             }
         } else {
             update_rocket_state_variables(&rocket, current_timestamp, &hguide_imu, NULL);
