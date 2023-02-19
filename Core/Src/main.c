@@ -94,11 +94,15 @@ void HGuideIMUProcessingTask(void *parameters)
             }
         } else {
             update_rocket_state_variables(&rocket, current_timestamp, &hguide_imu, NULL);
+
+            sprintf((char *) usart3_tx_data, "Gx: %0.8lf Gy: %0.8lf Gz: %0.8lf\r\n", GetAngularRateXRadPerSec(&hguide_imu),
+                                                                        GetAngularRateYRadPerSec(&hguide_imu),
+                                                                        GetAngularRateZRadPerSec(&hguide_imu));
             
-            sprintf((char *) usart3_tx_data, "Qx: %lf Qy: %lf Qz: %lf Qw: %lf\r\n", rocket.hguide_local_orientation.x,
-                                                                                    rocket.hguide_local_orientation.y,
-                                                                                    rocket.hguide_local_orientation.z,
-                                                                                    rocket.hguide_local_orientation.w);
+            // sprintf((char *) usart3_tx_data, "Qx: %lf Qy: %lf Qz: %lf Qw: %lf\r\n", rocket.hguide_local_orientation.x,
+            //                                                                         rocket.hguide_local_orientation.y,
+            //                                                                         rocket.hguide_local_orientation.z,
+            //                                                                         rocket.hguide_local_orientation.w);
             // sprintf((char *) usart3_tx_data, "%lf\r\n", get_vertical_accel_msec2(&rocket.fsv));
             USART3_DMA1_Stream3_Write((uint8_t *) usart3_tx_data, strlen((char *) usart3_tx_data));
         }
