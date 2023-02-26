@@ -52,6 +52,14 @@ double initialize_timestamp = 0;
 TaskHandle_t hguide_imu_processing_task_handle = NULL;
 TaskHandle_t gps_processing_task_handle = NULL;
 
+float32_t R_imu_f32[9] = {
+    1.0, 0.0, 0.0,
+    0.0, 1.0, 0.0,
+    0.0, 0.0, 1.0
+};
+
+arm_matrix_instance_f32 R_imu;
+
 void HGuideIMUProcessingTask(void *parameters)
 {
     HGuideIMU_t hguide_imu;
@@ -95,9 +103,13 @@ void HGuideIMUProcessingTask(void *parameters)
         } else {
             update_rocket_state_variables(&rocket, current_timestamp, &hguide_imu, NULL);
 
-            sprintf((char *) usart3_tx_data, "Gx: %0.8lf Gy: %0.8lf Gz: %0.8lf\r\n", GetAngularRateXRadPerSec(&hguide_imu),
-                                                                        GetAngularRateYRadPerSec(&hguide_imu),
-                                                                        GetAngularRateZRadPerSec(&hguide_imu));
+            quaternion_to_matrix(&rocket.hguide_local_orientation, &R_imu);
+
+            print_matrix(&R_imu, "Rotation matrix: ");
+
+            // sprintf((char *) usart3_tx_data, "Gx: %0.8lf Gy: %0.8lf Gz: %0.8lf\r\n", GetAngularRateXRadPerSec(&hguide_imu),
+            //                                                             GetAngularRateYRadPerSec(&hguide_imu),
+            //                                                             GetAngularRateZRadPerSec(&hguide_imu));
             
             // sprintf((char *) usart3_tx_data, "Qx: %lf Qy: %lf Qz: %lf Qw: %lf\r\n", rocket.hguide_local_orientation.x,
             //                                                                         rocket.hguide_local_orientation.y,
@@ -157,6 +169,8 @@ int main(void)
 
     // Init rocket
     init_rocket(&rocket, &gps);
+
+    arm_mat_init_f32(&R_imu, 3, 3, R_imu_f32);
 
     xTaskCreate(
         HGuideIMUProcessingTask,                /* Function that implements the task. */
