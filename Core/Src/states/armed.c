@@ -7,6 +7,7 @@ void armed_initialize(double currentTimestampSec) {
 }
 
 State *armed_execute(double currentTimestampSec) {
+    //move on to boost1 state when positive acceleration is detected
     if (get_vertical_accel_msec2(&rocket.fsv) > BOOSTER_IGNITION_ACCEL_THRESH_MSEC2) {
         return &boost1;
     }

@@ -7,9 +7,9 @@ void boost2_initialize(double currentTimestampSec) {
 }
 
 State *boost2_execute(double currentTimestampSec) {
-    if (rocket.fsv.time_since_launch_seconds >= SUSTAINER_BURNOUT_TIME_SEC
-        && get_vertical_accel_msec2(&rocket.fsv) < SUSTAINER_BURNOUT_ACCEL_THRESH_MSEC2) {
-        return &fast2;
+    //move on to coast2 when time since launch reaches sustainer burnout threshold
+    if (rocket.fsv.time_since_launch_seconds >= SUSTAINER_BURNOUT_TIME_SEC + rocket.sustainer_ignition_time_sec) {
+        return &coast2;
     }
 
     return &boost2;
